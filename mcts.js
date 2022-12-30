@@ -64,7 +64,11 @@ class GameState {
             return bidders['won'];
           }
         } else {
-          return 0;
+          if (!trumpRevealed) {
+            return bidders['won'];
+          } else {
+            return 0;
+          }
         }
         // if we are the bid winner
       } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
@@ -75,7 +79,11 @@ class GameState {
             return nonBidders['won'];
           }
         } else {
-          return 0;
+          if (!trumpRevealed) {
+            return nonBidders['won'];
+          } else {
+            return 0;
+          }
         }
       }
     }
@@ -320,27 +328,30 @@ class GameState {
     }
     let time_for_simulation = this.payload['timeRemaining'];
     let turns_to_play = 8 - this.payload['handsHistory'].length;
-    var adjusted_time;
+    // console.log(turns_to_play, givenTime);
 
+    let adjusted_time;
+    time_for_simulation -= 70;
     if (this.payload['handsHistory'].length === 0) {
-      adjusted_time = time_for_simulation / turns_to_play + 120;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 120;
     } else if (this.payload['handsHistory'].length == 1) {
-      adjusted_time = time_for_simulation / turns_to_play + 90;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
     } else if (this.payload['handsHistory'].length === 2) {
-      adjusted_time = time_for_simulation / turns_to_play + 80;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 80;
     } else if (this.payload['handsHistory'].length === 3) {
-      adjusted_time = time_for_simulation / turns_to_play + 65;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 65;
     } else if (this.payload['handsHistory'].length === 4) {
-      adjusted_time = time_for_simulation / turns_to_play + 40;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
     } else if (this.payload['handsHistory'].length === 5) {
-      adjusted_time = time_for_simulation / turns_to_play + 30;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 30;
     } else if (this.payload['handsHistory'].length === 6) {
-      adjusted_time = time_for_simulation / turns_to_play + 10;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 10;
     } else if (this.payload['handsHistory'].length === 7) {
       adjusted_time = time_for_simulation - 10;
     }
 
     let play_data = this.mcts(adjusted_time);
+    // console.log('Given Time:', adjusted_time);
     let besters = Object.entries(play_data);
     let copyBesters = JSON.parse(JSON.stringify(besters));
     let sortedBesters = copyBesters.sort((a, b) => b[1] - a[1]);

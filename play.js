@@ -32,6 +32,7 @@ GameState = require('./mcts.js');
   }
  */
 function play(payload) {
+  // console.log('Time rem:', payload.timeRemaining);
   var currentState = new GameState(payload);
   currentState.oneTimeCall();
   move = currentState.show();

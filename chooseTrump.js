@@ -36,6 +36,11 @@ function chooseTrump(payload) {
   if (count_of_suit === 1) {
     return { suit: sortedCards[0][1] };
   } else {
+    for (let card of cards) {
+      if (card[1] === suit_with_max_count && card[0] === 'J') {
+        return { suit: card[1] };
+      }
+    }
     return { suit: suit_with_max_count };
   }
 }
