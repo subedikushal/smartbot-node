@@ -241,7 +241,7 @@ class GameState {
       };
     } else if (this.payload.length < 3) {
       removeElement(this.payload[playerId], move);
-      playerId = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
+      this.payload['playerId'] = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
       this.payload['played'].push(move);
     } else {
       this.payload['played'].push(move);
@@ -249,7 +249,7 @@ class GameState {
       const players = this.payload['playerIds'];
       let starterPlayer = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
 
-      const idxOfWinner = playerId.indexOf(highestCardInPlayedCards);
+      const idxOfWinner = this.payload['played'].indexOf(highestCardInPlayedCards);
 
       let winner = players[(players.indexOf(playerId) + idxOfWinner) % 4];
 
@@ -261,8 +261,8 @@ class GameState {
         if (rank === 'T' || rank === '1') totalValue += 1;
       }
 
-      removeElement(playerId, move);
-      for (let teamInfo of this.payload['teams']) {
+      removeElement(this.payload[playerId], move);
+      for (var teamInfo of this.payload['teams']) {
         if (teamInfo['players'].includes(winner)) {
           teamInfo['won'] += totalValue;
         }
@@ -271,7 +271,7 @@ class GameState {
       //deep copy
       let newPlayed = JSON.parse(JSON.stringify(this.payload['played']));
       this.payload['handsHistory'].push([starterPlayer, newPlayed, winner]);
-      playerId = winner;
+      this.payload['playerId'] = winner;
       this.payload['played'] = [];
     }
   }
@@ -279,7 +279,6 @@ class GameState {
   randomPlay() {
     while (this.payload['handsHistory'].length < 8) {
       var legalMoves = this.getLegalMoves();
-
       this.makeAMove(randomChoice(legalMoves));
     }
     return this.terminalValue();
