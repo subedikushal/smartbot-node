@@ -19,10 +19,10 @@ const MIN_BID = 16;
 const PASS_BID = 0;
 
 function bid(payload) {
-  let bidState = payload.bidState;
-  let challengerBid = bidState.challengerBid;
-  let defenderBid = bidState.defenderBid;
-  let bidHistory = payload.bidHistory;
+  var bidState = payload.bidState;
+  var challengerBid = bidState.challengerBid;
+  var defenderBid = bidState.defenderBid;
+  var bidHistory = payload.bidHistory;
   const cards = payload.cards;
   var no_j = 0;
   var suitCount = {
@@ -31,7 +31,7 @@ function bid(payload) {
     H: 0,
     C: 0,
   };
-  for (let card in cards) {
+  for (let card of cards) {
     if (card[0] === 'J') {
       no_j += 1;
     }
@@ -57,9 +57,9 @@ function bid(payload) {
     return { bid: 0 };
   }
 
-  let myId = payload.playerId;
-  let defenderId = bidState.defendeId;
-  let challengerId = bidState.challengerId;
+  var myId = payload.playerId;
+  var defenderId = bidState.defendeId;
+  var challengerId = bidState.challengerId;
   if (myId === defenderId && challengerBid <= max_to_go_bid) {
     if (bidHistory.length == 3 && challengerBid === 0) {
       return { bid: MIN_BID };

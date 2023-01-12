@@ -1,6 +1,32 @@
 function last(items) {
   return items[items.length - 1];
 }
+let getHighestCardInPlayedCards = payload => {
+  var trumpRevealed = payload.trumpRevealed;
+  var trumpSuit = payload.trumpSuit;
+  const playedCards = payload.played;
+  const sortedPlayedCards = playedCards.sort((a, b) => cardPriority(b) - cardPriority(a));
+
+  var firstCardSuitCards = [];
+  var trumpCards = [];
+  var highestCard = '';
+  var currentSuit = playedCards[0][1];
+
+  for (let card of sortedPlayedCards) {
+    suit = card[1];
+    if (suit === currentSuit) {
+      firstCardSuitCards.push(card);
+    } else if (trumpSuit && trumpRevealed && suit === trumpSuit) {
+      trumpCards.push(card);
+    }
+  }
+  if (trumpCards.length > 0) {
+    highestCard = trumpCards[0];
+  } else {
+    highestCard = firstCardSuitCards[0];
+  }
+  return highestCard;
+};
 
 let cardPriority = card => {
   const cardRank = card[0];
@@ -81,11 +107,91 @@ function pickWinningCardIdx(cards, trumpSuit) {
 function isPartner(myIdx, maybePartnerIdx) {
   return myIdx % 2 === maybePartnerIdx % 2;
 }
-
+function removeElement(arr, el) {
+  const index = arr.indexOf(el);
+  if (index > -1) {
+    arr.splice(index, 1);
+  }
+}
 function getPartnerIdx(myIdx) {
   return (myIdx + 2) % 4;
 }
+let getTillPlayedCards = payload => {
+  const handsHistory = payload.handsHistory;
+  const tillPlayedCards = [];
+  for (let hand of handsHistory) {
+    tillPlayedCards.concat(hand[1]);
+  }
+  return tillPlayedCards;
+};
 
+function randomChoice(arr) {
+  const randomIndex = Math.floor(Math.random() * arr.length);
+  return arr[randomIndex];
+}
+
+let getLostSuitByOther = payload => {
+  let playerId = payload.playerId;
+  let players = payload.playerIds;
+  let handsHistory = payload.handsHistory;
+  let player2 = players[(players.indexOf(playerId) + 1) % 4];
+  let player3 = players[(players.indexOf(playerId) + 2) % 4];
+  let player4 = players[(players.indexOf(playerId) + 3) % 4];
+
+  cardsLost = {};
+  cardsLost[player2] = new Set();
+  cardsLost[player3] = new Set();
+  cardsLost[player4] = new Set();
+
+  for (let eachHand of handsHistory) {
+    let starterPlayer = eachHand[0];
+    let starterCardSuit = eachHand[1][0][1];
+
+    let secondCard = eachHand[1][1];
+    if (secondCard[1] !== starterCardSuit) {
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      if (cardPlayer !== playerId) {
+        cardsLost[cardPlayer].add(starterCardSuit);
+      }
+    }
+    thirdCard = eachHand[1][1];
+    if (thirdCard[1] !== starterCardSuit) {
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      if (cardPlayer !== playerId) {
+        cardsLost[cardPlayer].add(starterCardSuit);
+      }
+    }
+    forthCard = eachHand[1][1];
+    if (forthCard[1] !== starterCardSuit) {
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      if (cardPlayer !== playerId) {
+        cardsLost[cardPlayer].add(starterCardSuit);
+      }
+    }
+
+    const tillPlayedCards = getTillPlayedCards(payload);
+    var suits = ['D', 'H', 'S', 'C'];
+
+    var count_of_dropped_suit = {
+      D: 0,
+      S: 0,
+      H: 0,
+      C: 0,
+    };
+    for (let card of tillPlayedCards) {
+      count_of_dropped_suit[card[-1]] += 1;
+    }
+
+    for (let suit of suits) {
+      if (count_of_dropped_suit[suit] === 8) {
+        cardsLost[player2].add(suit);
+        cardsLost[player3].add(suit);
+        cardsLost[player4].add(suit);
+      }
+    }
+  }
+  return cardsLost;
+};
 module.exports = {
   last,
   getSuit,
@@ -95,4 +201,9 @@ module.exports = {
   getPartnerIdx,
   isHigh,
   cardPriority,
+  getHighestCardInPlayedCards,
+  getLostSuitByOther,
+  getTillPlayedCards,
+  removeElement,
+  randomChoice,
 };

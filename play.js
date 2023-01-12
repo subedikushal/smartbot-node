@@ -1,5 +1,5 @@
 const { getSuitCards, last, getSuit, pickWinningCardIdx, getPartnerIdx, isHigh } = require('./shared');
-
+GameState = require('./mcts.js');
 /**
  * @payload
   {
@@ -32,6 +32,14 @@ const { getSuitCards, last, getSuit, pickWinningCardIdx, getPartnerIdx, isHigh }
   }
  */
 function play(payload) {
+  var currentState = new GameState(payload);
+  currentState.oneTimeCall();
+  move = currentState.show();
+  if (move === 'OT') {
+    return { revealTrump: true };
+  } else {
+    return { card: move };
+  }
   console.log('play', JSON.stringify(payload));
 
   const ownCards = payload.cards;

@@ -20,8 +20,7 @@ function chooseTrump(payload) {
     H: 0,
     C: 0,
   };
-  for (idx in cards) {
-    card = cards[idx];
+  for (let card of cards) {
     if (card[0] === 'J') {
       no_j += 1;
     }
@@ -31,7 +30,7 @@ function chooseTrump(payload) {
   // return suit with max count
   const suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
-  let sortedCards = cards.sort((a, b) => cardPriority(b) - cardPriority(a));
+  var sortedCards = cards.sort((a, b) => cardPriority(b) - cardPriority(a));
 
   if (count_of_suit === 1) {
     return { suit: sortedCards[0][1] };
