@@ -5,7 +5,10 @@ let getHighestCardInPlayedCards = payload => {
   var trumpRevealed = payload.trumpRevealed;
   var trumpSuit = payload.trumpSuit;
   const playedCards = payload.played;
-  const sortedPlayedCards = playedCards.sort((a, b) => cardPriority(b) - cardPriority(a));
+
+  copyPlayedCards = JSON.parse(JSON.stringify(playedCards));
+
+  const sortedPlayedCards = copyPlayedCards.sort((a, b) => cardPriority(b) - cardPriority(a));
 
   var firstCardSuitCards = [];
   var trumpCards = [];

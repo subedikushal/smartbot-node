@@ -78,7 +78,6 @@ class GameState {
     var trumpRevealed = this.payload['trumpRevealed'];
     var trumpSuit = this.payload['trumpSuit'];
     var playedCards = this.payload['played'];
-    var sortedPlayedCards = playedCards.sort((a, b) => cardPriority(b) - cardPriority(a));
     var handsHistory = this.payload['handsHistory'];
 
     if (playedCards.length === 0) {

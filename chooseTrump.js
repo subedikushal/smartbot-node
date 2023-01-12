@@ -13,6 +13,7 @@ const { last, getSuit, cardPriority } = require('./shared');
 
 function chooseTrump(payload) {
   const cards = payload.cards;
+  let copyCards = JSON.parse(JSON.stringify(cards));
   var no_j = 0;
   var suitCount = {
     S: 0,
@@ -30,7 +31,7 @@ function chooseTrump(payload) {
   // return suit with max count
   const suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
-  var sortedCards = cards.sort((a, b) => cardPriority(b) - cardPriority(a));
+  var sortedCards = copyCards.sort((a, b) => cardPriority(b) - cardPriority(a));
 
   if (count_of_suit === 1) {
     return { suit: sortedCards[0][1] };
