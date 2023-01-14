@@ -34,14 +34,14 @@ class GameState {
     GameState.MIN_1 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 1) % 4];
     GameState.MIN_2 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 3) % 4];
     this.payload[this.payload['playerId']] = this.payload['cards'];
-    GameState.PLAYER = this.payload['playerId'];
   }
 
   terminalValue() {
     var to_return = null;
     if (this.payload['handsHistory'].length === 8) {
-      let bidders = {};
-      let nonBidders = {};
+	  //console.log(this.payload['teams'])
+      var bidders = {};
+      var nonBidders = {};
       for (let team_info of this.payload['teams']) {
         if (team_info['bid'] === 0) {
           nonBidders['players'] = team_info['players'];
@@ -57,24 +57,16 @@ class GameState {
       var bidValue = bidders['bid'];
       if (bidders['won'] >= bidders['bid']) {
         if (bidders['players'].includes(GameState.MAX_1) || bidders['players'].includes(GameState.MAX_2)) {
-          to_return = 1;
+          return 1;
         } else {
-          to_return = 0;
+          return 0;
         }
         // if we are the bid winner
-      } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
+      } else if (nonBidders['won'] > (GameState.MAX_BID_VALUE - bidValue)) {
         if (nonBidders['players'].includes(GameState.MAX_1) || nonBidders['players'].includes(GameState.MAX_2)) {
-          to_return = 1;
-        } else {
-          to_return = 0;
-        }
-      }
-      var trumpRevealed = this.payload['trumpRevealed'];
-      if (!to_return) {
-        if (trumpRevealed) {
-          return 0;
-        } else {
           return 1;
+        } else {
+          return 0;
         }
       }
     }
@@ -109,7 +101,7 @@ class GameState {
     if (trumpSuit) {
       const myTrumpCards = getSuitCards(myCards, trumpSuit);
       const didIRevealTheTrumpInThisHand =
-        trumpRevealed && trumpRevealed.playerId === playerId && trumpRevealed.hand === handsHistory.length + 1;
+        trumpRevealed.playerId === playerId && trumpRevealed.hand === handsHistory.length + 1;
 
       if (didIRevealTheTrumpInThisHand) {
         if (myTrumpCards.length === 0) {
@@ -127,6 +119,7 @@ class GameState {
             winningTrumps.push(card);
           }
         }
+		
         if (winningTrumps.length > 0) {
           return winningTrumps;
         } else {
@@ -233,16 +226,19 @@ class GameState {
 
   makeAMove(move) {
     var playerId = this.payload['playerId'];
+	
     if (move === 'OT') {
       this.payload['trumpSuit'] = this.payload['guessTrumpSuit'];
       this.payload['trumpRevealed'] = {
         hand: this.payload['handsHistory'].length + 1,
         playerId: this.payload.playerId,
       };
-    } else if (this.payload.length < 3) {
+	  
+    } else if (this.payload['played'].length < 3) {
       removeElement(this.payload[playerId], move);
       this.payload['playerId'] = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
       this.payload['played'].push(move);
+	  
     } else {
       this.payload['played'].push(move);
       let highestCardInPlayedCards = getHighestCardInPlayedCards(this.payload);
@@ -250,26 +246,31 @@ class GameState {
       let starterPlayer = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
 
       const idxOfWinner = this.payload['played'].indexOf(highestCardInPlayedCards);
-
-      let winner = players[(players.indexOf(playerId) + idxOfWinner) % 4];
-
-      let totalValue = 0;
+      var winner = players[(players.indexOf(playerId)+idxOfWinner+1)%4];
+      var totalValue = 0;
       for (let eachPlayed of this.payload['played']) {
         let rank = eachPlayed[0];
         if (rank === 'J') totalValue += 3;
         if (rank === '9') totalValue += 2;
         if (rank === 'T' || rank === '1') totalValue += 1;
       }
-
+	  
       removeElement(this.payload[playerId], move);
       for (var teamInfo of this.payload['teams']) {
+		//console.log(teamInfo)
+		//console.log(winner)
         if (teamInfo['players'].includes(winner)) {
           teamInfo['won'] += totalValue;
+		  //console.log("adding value to team", teamInfo['players'], totalValue)
         }
+		//console.log(teamInfo)
+		//console.log("----")
       }
+	  //console.log("....................")
+	  //console.log("....................")
 
       //deep copy
-      let newPlayed = JSON.parse(JSON.stringify(this.payload['played']));
+      var newPlayed = JSON.parse(JSON.stringify(this.payload['played']));
       this.payload['handsHistory'].push([starterPlayer, newPlayed, winner]);
       this.payload['playerId'] = winner;
       this.payload['played'] = [];
@@ -298,11 +299,11 @@ class GameState {
       if (elapsedTime > givenTime) {
         break;
       }
-      var maxUcb = -Infinity;
+      var maxUcb = -100000000000000;
       for (let item of Object.entries(visitsScore)) {
         let visits = item[1][0];
         let score = item[1][1];
-        var newUcb = Infinity;
+        var newUcb = 100000000000000;
         if (visits !== 0) {
           newUcb = score / visits + Math.sqrt((2 * Math.log(iterations)) / visits);
         }
@@ -311,18 +312,16 @@ class GameState {
           bestMove = item[0];
         }
       }
-
       // let newPayload = JSON.parse(JSON.stringify(this.payload));
       // var tempState = new GameState(newPayload);
       var tempState = _.cloneDeep(this);
       tempState.randomlyDistribute();
       tempState.makeAMove(bestMove);
       var result = tempState.randomPlay();
-      // console.log('result:', result);
 
       visitsScore[bestMove][0] += 1;
       if (result === 1) {
-        visitsScore[bestMove][1] += result;
+        visitsScore[bestMove][1] += 1;
       }
       iterations += 1;
     }
@@ -358,8 +357,8 @@ class GameState {
 
     let play_data = this.mcts(adjusted_time);
     let besters = Object.entries(play_data);
-    let sortedBesters = besters.sort((a, b) => a[1][0] - b[1][0]);
-    console.log(this.payload.playerId, sortedBesters);
+    let sortedBesters = besters.sort((a, b) => b[1][0] - a[1][0]);
+    //console.log(this.payload.playerId, sortedBesters);
     return sortedBesters[0][0];
   }
 }
