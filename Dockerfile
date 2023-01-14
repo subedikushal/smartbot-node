@@ -18,7 +18,7 @@ WORKDIR ./client
 # ADD command adds the file or folder to the destination. 
 # Since the working directory is `./client`, it copies the file inside `./client`.
 ADD ./* ./
-
+RUN npm install
 # EXPOSE opens up the port to communication outside the container.
 # WE ASSUME THAT YOUR SERVER WILL RUN ON THIS PORT. 
 # DO NOT CHANGE THIS.
