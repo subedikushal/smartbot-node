@@ -121,9 +121,9 @@ function getPartnerIdx(myIdx) {
 }
 let getTillPlayedCards = payload => {
   const handsHistory = payload.handsHistory;
-  const tillPlayedCards = [];
+  var tillPlayedCards = [];
   for (let hand of handsHistory) {
-    tillPlayedCards.concat(hand[1]);
+    tillPlayedCards = tillPlayedCards.concat(hand[1]);
   }
   return tillPlayedCards;
 };
