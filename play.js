@@ -40,6 +40,8 @@ function play(payload) {
   } else {
     return { card: move };
   }
+  
+  
   console.log('play', JSON.stringify(payload));
 
   const ownCards = payload.cards;

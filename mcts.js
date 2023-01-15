@@ -11,7 +11,18 @@ const {
 } = require('./shared');
 
 class GameState {
-  static ITERATIONS = 8;
+	
+  static CARDS_DICT = 
+  {
+	  'J': 3,
+	  '9': 2,
+	  'A': 1.1,
+	  'T': 1,
+	  'K': 0.4,
+	  'Q': 0.3,
+	  '8': 0.2,
+	  '7': 0.1
+  };
 
   static MAX_1 = '.';
   static MAX_2 = '.';
@@ -19,15 +30,16 @@ class GameState {
   static MIN_2 = '.';
   static TRUMPER = '';
 
-  static MAX_VALUE = 1;
-  static MIN_VALUE = -1;
-
   static MAX_BID_VALUE = 28;
 
   static PLAYER = '';
+	
+	//checked
   constructor(payload) {
     this.payload = payload;
   }
+  
+	//verified
   oneTimeCall() {
     GameState.MAX_1 = this.payload['playerId'];
     GameState.MAX_2 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 2) % 4];
@@ -36,9 +48,13 @@ class GameState {
     this.payload[this.payload['playerId']] = this.payload['cards'];
   }
 
+	//verified
   terminalValue() {
+	//console.log(this.payload['teams'])
+	if (!this.payload['trumpRevealed']) {return 0;}
+	
     var to_return = null;
-    if (this.payload['handsHistory'].length === 8) {
+    if (this.payload.handsHistory.length === 8) {
 	  //console.log(this.payload['teams'])
       var bidders = {};
       var nonBidders = {};
@@ -55,13 +71,16 @@ class GameState {
       }
 
       var bidValue = bidders['bid'];
+	  
+	  //bidders won
       if (bidders['won'] >= bidders['bid']) {
         if (bidders['players'].includes(GameState.MAX_1) || bidders['players'].includes(GameState.MAX_2)) {
           return 1;
         } else {
           return 0;
         }
-        // if we are the bid winner
+       
+	  //non bidderrs bid winner
       } else if (nonBidders['won'] > (GameState.MAX_BID_VALUE - bidValue)) {
         if (nonBidders['players'].includes(GameState.MAX_1) || nonBidders['players'].includes(GameState.MAX_2)) {
           return 1;
@@ -69,9 +88,11 @@ class GameState {
           return 0;
         }
       }
+	  console.log("SHOULD NOT BE HERE")
     }
-    return to_return;
   }
+  
+	//verified
   getLegalMoves() {
     var playerId = this.payload['playerId'];
     var myCards = this.payload[playerId];
@@ -79,58 +100,111 @@ class GameState {
     var trumpSuit = this.payload['trumpSuit'];
     var playedCards = this.payload['played'];
     var handsHistory = this.payload['handsHistory'];
-
+	
+	//1. I am the first one to play ====== all cards are legal
     if (playedCards.length === 0) {
       return myCards;
     }
 
+	//2. I am not the first one to play
     var currentSuit = playedCards[0][1];
-    var suitCards = getSuitCards(myCards, currentSuit);
+    var suitCards = []
+	for (let card of myCards)
+	{
+		if (card[1] === currentSuit) {suitCards.push(card);}
+	}
 
+	//2.1 I have same suit card in the ground ====== same suit cards
     if (suitCards.length > 0) {
       return suitCards;
     }
 
+	//2.2 I dont have same suit as the round
+	
+	//2.2.1. If trump is not revealed ======= any-card + OT goes 
     if (!trumpRevealed) {
-      let legalMoves = JSON.parse(JSON.stringify(myCards));
+      var legalMoves = JSON.parse(JSON.stringify(myCards));
       legalMoves.push('OT');
       return legalMoves;
     }
 
-    if (trumpSuit) {
-      const myTrumpCards = getSuitCards(myCards, trumpSuit);
-      const didIRevealTheTrumpInThisHand =
-        trumpRevealed.playerId === playerId && trumpRevealed.hand === handsHistory.length + 1;
-
-      if (didIRevealTheTrumpInThisHand) {
-        if (myTrumpCards.length === 0) {
-          return myCards;
-        }
-
-        // get highest card in the played cards
-        var highestCard = getHighestCardInPlayedCards(this.payload);
-        if (highestCard[1] !== trumpSuit) {
-          return myTrumpCards;
-        }
-        const winningTrumps = [];
-        for (let card of myTrumpCards) {
-          if (cardPriority(card) > cardPriority(highestCard)) {
-            winningTrumps.push(card);
-          }
-        }
-		
-        if (winningTrumps.length > 0) {
-          return winningTrumps;
-        } else {
-          return myTrumpCards;
-        }
-      }
-
-      return myCards;
+	//2.2.2. Trump is revelead	
+	let myTrumpCards = [];
+	for (let card of myCards)
+	{
+		if (card[1] === trumpSuit) {myTrumpCards.push(card);}
+	}
+	
+	//2.2.2.1: I didnot reveal trump in this round ==== all the cards are legal
+    let didIRevealTheTrumpInThisHand =
+        (trumpRevealed.playerId === playerId) && (trumpRevealed.hand === (handsHistory.length + 1));
+    if (!didIRevealTheTrumpInThisHand) {
+		return myCards;
+	}
+	
+	//2.2.2.2: I revealed trump in this very round
+	
+	//2.2.2.2.1: I dont have trump card ===== all the cards are legals
+    if (myTrumpCards.length === 0) {
+        return myCards;
     }
-    return myCards;
+
+	//2.2.2.2.2: I have some trump cards
+		
+	//2.2.2.2.2.1: There is no trump in the game ===== all turmp cards
+	let does_not_contain = true;
+    for (let played_cards of playedCards)
+	{
+		if (played_cards[1] === trumpSuit)
+		{
+            does_not_contain = false;
+            break;
+		}
+	}
+    if (does_not_contain) {return myTrumpCards;}    
+	
+	//2.2.2.2.2.2: There is some trumps
+    var highest_trump_on_ground = -1000000000
+	var highest_trump_card = ''
+	for (let played_card of playedCards)
+	{
+		//console.log(played_card)
+		if (played_card[1] === trumpSuit)
+		{
+			highest_trump_on_ground = Math.max(highest_trump_on_ground, GameState.CARDS_DICT[played_card[0]])
+			highest_trump_card = played_card
+		}
+	}
+	
+	//2.2.2.2.2.2.1: The highest trump is of friend ===== any trump is good
+    var index_of_highest_trump = playedCards.indexOf(highest_trump_on_ground)
+	if ((playedCards.length === 2) && (index_of_highest_trump === 0)) {
+		return myTrumpCards
+	}
+    else if ((playedCards.length === 3) && (index_of_highest_trump === 1)) {
+		return myTrumpCards
+	}
+
+	//2.2.2.2.2.2.2: The highest card is not of the friend
+    let winningTrumps = [];
+	for (let card of myTrumpCards) {
+	  if (GameState.CARDS_DICT[card[0]] > highest_trump_on_ground) {
+		winningTrumps.push(card);
+	  }
+	}
+		
+	//2.2.2.2.2.2.2.1: I have some winning trumps ==== the winning trumps are legal
+	//2.2.2.2.2.2.2.2: I dont have winning trumps ==== any trump is legal
+    if (winningTrumps.length > 0) {
+        return winningTrumps;
+    } 
+	else {
+        return myTrumpCards;
+    }
+
   }
 
+	//verified
   randomlyDistribute() {
     const suits = ['C', 'D', 'H', 'S'];
     const ranks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
@@ -140,14 +214,16 @@ class GameState {
         allPossibilities.push(rank + suit);
       }
     }
-    this.payload[this.payload['playerId']] = this.payload['cards'];
+    //this.payload[this.payload['playerId']] = this.payload['cards'];
     let player2 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 1) % 4];
     let player3 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 2) % 4];
     let player4 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 3) % 4];
-
-    // lost suit by others
     var cardsLost = getLostSuitByOther(this.payload);
-    var doneCards = getTillPlayedCards(this.payload).concat(this.payload['played'], this.payload['cards']);
+    var doneCards = getTillPlayedCards(this.payload);
+    var played = this.payload.played;
+    var ownCards = this.payload.cards;;
+
+    doneCards = doneCards.concat(played, ownCards);
 
     var remainingCards = [];
     for (let card of allPossibilities) {
@@ -155,74 +231,55 @@ class GameState {
         remainingCards.push(card);
       }
     }
-
     let noOfCardsToDistribute = remainingCards.length;
-    let p2CanGet = 0;
-    let p3CanGet = 0;
-    let p4CanGet = 0;
 
-    while (true) {
-      p2CanGet += 1;
-      noOfCardsToDistribute -= 1;
-      if (noOfCardsToDistribute <= 0) {
-        break;
-      }
-
-      p3CanGet += 1;
-      noOfCardsToDistribute -= 1;
-      if (noOfCardsToDistribute <= 0) {
-        break;
-      }
-      p4CanGet += 1;
-      noOfCardsToDistribute -= 1;
-      if (noOfCardsToDistribute <= 0) {
-        break;
-      }
-    }
+	var gets_count = {}
+	gets_count[player2] = Math.floor(noOfCardsToDistribute/3) + (noOfCardsToDistribute%3 >= 1);
+	gets_count[player3] = Math.floor(noOfCardsToDistribute/3) + (noOfCardsToDistribute%3 >= 2);
+	gets_count[player4] = Math.floor(noOfCardsToDistribute/3);
 
     this.payload[player2] = [];
     this.payload[player3] = [];
     this.payload[player4] = [];
-    while (remainingCards.length > 0) {
-      let randomCard = randomChoice(remainingCards);
-      let randomCardSuit = getSuit(randomCard);
-
-      if (!cardsLost[player2].has(randomCardSuit) && p2CanGet > 0) {
-        this.payload[player2].push(randomCard);
-        removeElement(remainingCards, randomCard);
-        p2CanGet -= 1;
-      } else if (!cardsLost[player3].has(randomCardSuit) && p3CanGet > 0) {
-        this.payload[player3].push(randomCard);
-        removeElement(remainingCards, randomCard);
-        p3CanGet -= 1;
-      } else if (!cardsLost[player4].has(randomCardSuit) && p4CanGet > 0) {
-        this.payload[player4].push(randomCard);
-        removeElement(remainingCards, randomCard);
-        p4CanGet -= 1;
-      } else if (p2CanGet > 0) {
-        this.payload[player2].push(randomCard);
-        removeElement(remainingCards, randomCard);
-        p2CanGet -= 1;
-      } else if (p3CanGet > 0) {
-        this.payload[player3].push(randomCard);
-        removeElement(remainingCards, randomCard);
-        p3CanGet -= 1;
-      } else if (p4CanGet > 0) {
-        this.payload[player4].push(randomCard);
-        removeElement(remainingCards, randomCard);
-        p4CanGet -= 1;
-      }
-
-      if (this.payload['trumpSuit']) {
-        this.payload['guessTrumpSuit'] = this.payload['trumpSuit'];
-        this.payload['realness'] = true;
-      } else {
-        this.payload['guessTrumpSuit'] = randomChoice(['C', 'D', 'H', 'S']);
-        this.payload['realness'] = false;
-      }
-    }
+	
+	//var cardsLost = getLostSuitByOther(this.payload);
+	cardsLost = {}
+	cardsLost[player2] = []
+	cardsLost[player3] = []
+	cardsLost[player4] = []
+	
+	let besters = Object.entries(cardsLost);
+	let sortedCardsLost = besters.sort((a, b) => b[1].length - a[1].length);
+	
+	for (let each_player of sortedCardsLost)
+	{
+		let player_id = each_player[0]
+        let this_player_gets = gets_count[player_id]
+        let this_player_lost = each_player[1]
+		//console.log(this_player_lost)
+		while (this_player_gets > 0)
+		{
+			//console.log("in")
+			let card = randomChoice(remainingCards)
+			if (this_player_lost.includes(card[1])) {continue;}
+			this.payload[player_id].push(card)
+			removeElement(remainingCards, card)
+			this_player_gets -= 1
+		}
+	}
+	if (this.payload['trumpSuit']) 
+	{
+		this.payload['guessTrumpSuit'] = this.payload['trumpSuit'];
+		this.payload['realness'] = true;
+	} 
+	else 
+	{
+		this.payload['guessTrumpSuit'] = randomChoice(['C', 'D', 'H', 'S']);
+		this.payload['realness'] = false;
+	}
   }
 
+	//maybe works
   makeAMove(move) {
     var playerId = this.payload['playerId'];
 	
@@ -233,19 +290,24 @@ class GameState {
         playerId: this.payload.playerId,
       };
 	  
-    } else if (this.payload['played'].length < 3) {
+    } 
+	
+	
+	  else if (this.payload['played'].length < 3) {
       removeElement(this.payload[playerId], move);
       this.payload['playerId'] = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
       this.payload['played'].push(move);
+    } 
+	
 	  
-    } else {
+	  else {
       this.payload['played'].push(move);
       let highestCardInPlayedCards = getHighestCardInPlayedCards(this.payload);
       const players = this.payload['playerIds'];
       let starterPlayer = this.payload['playerIds'][(this.payload['playerIds'].indexOf(playerId) + 1) % 4];
-
       const idxOfWinner = this.payload['played'].indexOf(highestCardInPlayedCards);
       var winner = players[(players.indexOf(playerId)+idxOfWinner+1)%4];
+	  //console.log(winner)
       var totalValue = 0;
       for (let eachPlayed of this.payload['played']) {
         let rank = eachPlayed[0];
@@ -256,19 +318,11 @@ class GameState {
 	  
       removeElement(this.payload[playerId], move);
       for (var teamInfo of this.payload['teams']) {
-		//console.log(teamInfo)
-		//console.log(winner)
         if (teamInfo['players'].includes(winner)) {
           teamInfo['won'] += totalValue;
-		  //console.log("adding value to team", teamInfo['players'], totalValue)
         }
-		//console.log(teamInfo)
-		//console.log("----")
       }
-	  //console.log("....................")
-	  //console.log("....................")
 
-      //deep copy
       var newPlayed = JSON.parse(JSON.stringify(this.payload['played']));
       this.payload['handsHistory'].push([starterPlayer, newPlayed, winner]);
       this.payload['playerId'] = winner;
@@ -276,6 +330,7 @@ class GameState {
     }
   }
 
+	//verified
   randomPlay() {
     while (this.payload['handsHistory'].length < 8) {
       var legalMoves = this.getLegalMoves();
@@ -284,6 +339,7 @@ class GameState {
     return this.terminalValue();
   }
 
+	// verified
   mcts(givenTime) {
     var bestMove;
     var start = new Date().getTime();
@@ -302,19 +358,22 @@ class GameState {
       for (let item of Object.entries(visitsScore)) {
         let visits = item[1][0];
         let score = item[1][1];
-        var newUcb = 100000000000000;
-        if (visits !== 0) {
-          newUcb = score / visits + Math.sqrt((2 * Math.log(iterations)) / visits);
+        var newUcb;
+		if (visits === 0)
+		{
+			newUcb = 10000000000000
+		}
+        else 
+		{
+          newUcb = score / visits + Math.sqrt(2 * Math.log(iterations)/visits);
         }
         if (newUcb > maxUcb) {
           maxUcb = newUcb;
           bestMove = item[0];
         }
       }
-      // let newPayload = JSON.parse(JSON.stringify(this.payload));
-      // var tempState = new GameState(newPayload);
       var tempState = _.cloneDeep(this);
-      tempState.randomlyDistribute();
+	  tempState.randomlyDistribute();
       tempState.makeAMove(bestMove);
       var result = tempState.randomPlay();
 
@@ -327,6 +386,7 @@ class GameState {
     return visitsScore;
   }
 
+	// verified
   show() {
     let legalMoves = this.getLegalMoves();
     if (legalMoves.length === 1) {
@@ -357,6 +417,8 @@ class GameState {
     let play_data = this.mcts(adjusted_time);
     let besters = Object.entries(play_data);
     let sortedBesters = besters.sort((a, b) => b[1][0] - a[1][0]);
+	console.log(sortedBesters)
+	//console.log(sortedBesters[0][0])
     //console.log(this.payload.playerId, sortedBesters);
     return sortedBesters[0][0];
   }

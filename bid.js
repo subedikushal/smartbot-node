@@ -44,13 +44,18 @@ function bid(payload) {
   var max_to_go_bid = 0;
 
   if (count_of_suit === 1) {
-    max_to_go_bid = Math.min(16, 15 + no_j);
+    max_to_go_bid = Math.min(16, 14 + no_j);
   } else if (count_of_suit === 2) {
-    max_to_go_bid = Math.min(17, 15 + no_j);
+    max_to_go_bid = Math.min(16, 15 + no_j);
   } else if (count_of_suit == 3) {
-    max_to_go_bid = Math.min(18, 16 + no_j);
+    max_to_go_bid = Math.min(17, 16 + no_j);
   } else {
-    max_to_go_bid = 20;
+    max_to_go_bid = 17;
+  }
+
+  if (bidHistory.length === 0 && max_to_go_bid >= MIN_BID)
+  {
+	return { bid:MIN_BID }
   }
 
   if (max_to_go_bid < MIN_BID) {

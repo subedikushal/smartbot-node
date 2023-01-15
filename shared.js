@@ -1,19 +1,19 @@
 function last(items) {
   return items[items.length - 1];
 }
+
 let getHighestCardInPlayedCards = payload => {
   var trumpRevealed = payload.trumpRevealed;
   var trumpSuit = payload.trumpSuit;
   const playedCards = payload.played;
+  var currentSuit = playedCards[0][1];
 
   copyPlayedCards = JSON.parse(JSON.stringify(playedCards));
 
   const sortedPlayedCards = copyPlayedCards.sort((a, b) => cardPriority(b) - cardPriority(a));
-
   var firstCardSuitCards = [];
   var trumpCards = [];
   var highestCard = '';
-  var currentSuit = playedCards[0][1];
 
   for (let card of sortedPlayedCards) {
     suit = card[1];
@@ -121,9 +121,9 @@ function getPartnerIdx(myIdx) {
 }
 let getTillPlayedCards = payload => {
   const handsHistory = payload.handsHistory;
-  const tillPlayedCards = [];
+  var tillPlayedCards = [];
   for (let hand of handsHistory) {
-    tillPlayedCards.concat(hand[1]);
+    tillPlayedCards = tillPlayedCards.concat(hand[1]);
   }
   return tillPlayedCards;
 };
@@ -157,44 +157,24 @@ let getLostSuitByOther = payload => {
         cardsLost[cardPlayer].add(starterCardSuit);
       }
     }
-    thirdCard = eachHand[1][1];
+    thirdCard = eachHand[1][2];
     if (thirdCard[1] !== starterCardSuit) {
-      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 2) % 4];
       if (cardPlayer !== playerId) {
         cardsLost[cardPlayer].add(starterCardSuit);
       }
     }
-    forthCard = eachHand[1][1];
+    forthCard = eachHand[1][3];
     if (forthCard[1] !== starterCardSuit) {
-      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 3) % 4];
       if (cardPlayer !== playerId) {
         cardsLost[cardPlayer].add(starterCardSuit);
-      }
-    }
-
-    const tillPlayedCards = getTillPlayedCards(payload);
-    var suits = ['D', 'H', 'S', 'C'];
-
-    var count_of_dropped_suit = {
-      D: 0,
-      S: 0,
-      H: 0,
-      C: 0,
-    };
-    for (let card of tillPlayedCards) {
-      count_of_dropped_suit[card[-1]] += 1;
-    }
-
-    for (let suit of suits) {
-      if (count_of_dropped_suit[suit] === 8) {
-        cardsLost[player2].add(suit);
-        cardsLost[player3].add(suit);
-        cardsLost[player4].add(suit);
       }
     }
   }
   return cardsLost;
 };
+
 module.exports = {
   last,
   getSuit,
