@@ -15,15 +15,21 @@
   }
  */
 
+const { getSuitCards } = require('./shared');
+
 const MIN_BID = 16;
-const PASS_BID = 0;
 
 function bid(payload) {
   var bidState = payload.bidState;
   var challengerBid = bidState.challengerBid;
   var defenderBid = bidState.defenderBid;
   var bidHistory = payload.bidHistory;
+  var playerIds = payload.playerIds;
   const cards = payload.cards;
+  var myId = payload.playerId;
+  var defenderId = bidState.defenderId;
+  var challengerId = bidState.challengerId;
+  var friendId = playerIds[(playerIds.indexOf(myId) + 2) % 4];
   var no_j = 0;
   var suitCount = {
     S: 0,
@@ -43,25 +49,84 @@ function bid(payload) {
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
 
-  if (count_of_suit === 1) {
-    max_to_go_bid = Math.min(16, 15 + no_j);
-  } else if (count_of_suit === 2) {
-    max_to_go_bid = Math.min(17, 15 + no_j);
-  } else if (count_of_suit == 3) {
+  if (count_of_suit === 2) {
+    let suitCards = getSuitCards(cards, suit_with_max_count);
+    let totalVal = 0;
+    for (let c of suitCards) {
+      if (c[0] === 'J' || c[0] === '9') {
+        max_to_go_bid = Math.min(17, 16 + no_j);
+      }
+      if (c[0] === 'J') {
+        totalVal += 3;
+      }
+      if (c[0] === '9') {
+        totalVal += 2;
+      }
+      if (c[0] === '1' || c[0] === 'T') {
+        totalVal += 1;
+      }
+    }
+    if (max_to_go_bid === 0 && no_j >= 1) {
+      max_to_go_bid = 16;
+    }
+    if (totalVal >= 2) {
+      max_to_go_bid = 16;
+    }
+  } else if (count_of_suit === 3) {
+    let suitCards = getSuitCards(cards, suit_with_max_count);
+    let totalVal = 0;
+    for (let c of suitCards) {
+      if (c[0] === 'J' || c[0] === '9') {
+        max_to_go_bid = 19;
+      }
+      if (c[0] === 'J') {
+        totalVal += 3;
+      }
+      if (c[0] === '9') {
+        totalVal += 2;
+      }
+      if (c[0] === '1' || c[0] === 'T') {
+        totalVal += 1;
+      }
+      if (totalVal === 0) {
+        max_to_go_bid = 0;
+      } else if (totalVal >= 3) {
+        max_to_go_bid = 18;
+      }
+    }
     max_to_go_bid = Math.min(18, 16 + no_j);
-  } else {
-    max_to_go_bid = 20;
+  } else if (count_of_suit === 4) {
+    let suitCards = getSuitCards(cards, suit_with_max_count);
+    let totalVal = 0;
+    for (let c of suitCards) {
+      if (c[0] === 'J') {
+        totalVal += 3;
+      }
+      if (c[0] === '9') {
+        totalVal += 2;
+      }
+      if (c[0] === '1' || c[0] === 'T') {
+        totalVal += 1;
+      }
+    }
+    if (totalVal >= 5) {
+      max_to_go_bid = 20;
+    } else if (totalVal === 4) {
+      max_to_go_bid = 19;
+    } else {
+      max_to_go_bid = 18;
+    }
   }
 
-  if (max_to_go_bid < MIN_BID) {
+  if (max_to_go_bid < 16) {
     return { bid: 0 };
   }
 
-  var myId = payload.playerId;
-  var defenderId = bidState.defendeId;
-  var challengerId = bidState.challengerId;
   if (myId === defenderId && challengerBid <= max_to_go_bid) {
-    if (bidHistory.length == 3 && challengerBid === 0) {
+    if (challengerId === friendId && challengerBid >= 17) {
+      return { bid: 0 };
+    }
+    if (bidHistory.length === 3 && challengerBid === 0) {
       return { bid: MIN_BID };
     }
     if (challengerBid === 0) {
@@ -72,7 +137,11 @@ function bid(payload) {
       };
     }
   } else if (myId === challengerId && defenderBid < max_to_go_bid) {
-    if (bidHistory.length == 3 && defenderBid === 0) {
+    if (defenderId === friendId && defenderBid >= 17) {
+      console.log(friendId);
+      return { bid: 0 };
+    }
+    if (bidHistory.length === 3 && defenderBid === 0) {
       return { bid: MIN_BID };
     }
     if (defenderBid === 0) {

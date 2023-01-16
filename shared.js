@@ -1,10 +1,114 @@
+const { orderBy } = require('lodash');
+
 function last(items) {
   return items[items.length - 1];
 }
+
+let getSirOfSuit = (payload, suit) => {
+  var suitCardsObj = getSuitCardObj(payload);
+  orderedRanks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
+  var suitCards = suitCardsObj[suit];
+  if (suitCards.length > 0) {
+    for (let card of suitCards) {
+      var rank = card[0];
+      removeElement(orderedRanks, rank);
+    }
+  }
+  if (orderedRanks.length > 0) {
+    return orderedRanks[0] + suit;
+  }
+  return null;
+};
+
+let isFriendWinning = body => {
+  var played_cards = body['played'];
+  var playerId = body['playerId'];
+  var trump_suit = body['trumpSuit'];
+  var players = body['playerIds'];
+  var own_cards = body['cards'];
+  var till_played_cards = getTillPlayedCards(body);
+  let player2 = players[(players.indexOf(playerId) + 1) % 4];
+
+  var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
+  var count_of_own_cards = { S: 0, D: 0, H: 0, C: 0 };
+  for (let card of till_played_cards) {
+    let key = card[1];
+    count_of_dropped_cards[key] += 1;
+  }
+  for (let card of own_cards) {
+    let key = card[1];
+    count_of_own_cards[key] += 1;
+  }
+  var len_pc = played_cards.length;
+
+  if (len_pc <= 1) return false;
+
+  var friendCard = played_cards[0];
+  var friendCardSuit = friendCard[1];
+  let highestCard = getHighestCardInPlayedCards(body);
+  if (len_pc === 2) {
+    var cardsLost = getLostSuitByOther(body);
+    var sirOfFriendSuit = getSirOfSuit(body, friendCardSuit);
+    if (friendCard !== highestCard) {
+      return false;
+    }
+    if (friendCard === highestCard) {
+      if (count_of_dropped_cards[friendCardSuit] === 0) {
+        return true;
+      }
+      if (
+        (trump_suit && count_of_dropped_cards[trump_suit] + count_of_own_cards[trump_suit] === 8) ||
+        cardsLost[player2].has(trump_suit)
+      ) {
+        if (cardPriority(friendCard) >= cardPriority(sirOfFriendSuit)) {
+          return true;
+        }
+        if (cardsLost[player2].has(played_cards[0][1])) {
+          return true;
+        }
+        if (count_of_dropped_cards[played_cards[0][1]] + count_of_own_cards[played_cards[0][1]] >= 7) {
+          return true;
+        }
+        if (played_cards[0][1] === played_cards[1][1] && count_of_dropped_cards[played_cards[0][1]] >= 6) {
+          return true;
+        }
+        if (
+          played_cards[0][1] === played_cards[1][1] &&
+          count_of_dropped_cards[played_cards[0][1]] + count_of_own_cards[played_cards[0][1]] >= 6
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  if (len_pc === 3) {
+    if (highestCard === friendCard) {
+      return true;
+    }
+  }
+  return false;
+};
+
+let getSuitCardObj = payload => {
+  cards = payload.cards;
+  suitCardObj = {
+    D: [],
+    H: [],
+    C: [],
+    S: [],
+  };
+  for (let card of cards) {
+    suit = card[1];
+    suitCardObj[suit].push(card);
+    suitCardObj[suit].sort((a, b) => cardPriority(b) - cardPriority(a));
+  }
+  return suitCardObj;
+};
 let getHighestCardInPlayedCards = payload => {
-  var trumpRevealed = payload.trumpRevealed;
-  var trumpSuit = payload.trumpSuit;
-  const playedCards = payload.played;
+  var trumpRevealed = payload['trumpRevealed'];
+  var trumpSuit = payload['trumpSuit'];
+  const playedCards = payload['played'];
 
   copyPlayedCards = JSON.parse(JSON.stringify(playedCards));
 
@@ -209,4 +313,5 @@ module.exports = {
   getTillPlayedCards,
   removeElement,
   randomChoice,
+  isFriendWinning,
 };
