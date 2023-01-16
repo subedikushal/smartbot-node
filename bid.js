@@ -44,80 +44,116 @@ function bid(payload) {
     suitCount[card[1]] += 1;
   }
 
+  let suitWithSameCount = [];
+  for (let card of cards) {
+    if (suitCount[card[1]] === 2) {
+      suitWithSameCount.push(card[1]);
+    }
+  }
+  var toGoSuit;
+  if (suitWithSameCount.length === 2) {
+    let h = -100000000000;
+    for (let suit of suitWithSameCount) {
+      let suitCards = getSuitCards(cards, suit);
+      let total = 0;
+      for (let card of suitCards) {
+        if (card[0] === 'J') {
+          total += 3;
+        }
+        if (card[0] === '9') {
+          total += 2;
+        }
+        if (card[0] === 'T' || card[0] === '1') {
+          total += 1;
+        }
+      }
+      if (total > h) {
+        h = total;
+        toGoSuit = suit;
+      }
+    }
+  }
   // return suit with max count
-  const suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
+  var suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
 
+  if (count_of_suit === 1 && no_j > 1) {
+    max_to_go_bid = 16;
+  }
   if (count_of_suit === 2) {
-    let suitCards = getSuitCards(cards, suit_with_max_count);
-    let totalVal = 0;
-    for (let c of suitCards) {
-      if (c[0] === 'J' || c[0] === '9') {
-        max_to_go_bid = Math.min(17, 16 + no_j);
-      }
-      if (c[0] === 'J') {
-        totalVal += 3;
-      }
-      if (c[0] === '9') {
-        totalVal += 2;
-      }
-      if (c[0] === '1' || c[0] === 'T') {
-        totalVal += 1;
-      }
-    }
-    if (max_to_go_bid === 0 && no_j >= 1) {
-      max_to_go_bid = 16;
-    }
-    if (totalVal >= 2) {
-      max_to_go_bid = 16;
-    }
+    max_to_go_bid = Math.min(17, 15 + no_j);
+    // if (suitWithSameCount.length === 2) {
+    //   suit_with_max_count = toGoSuit;
+    // }
+    // let suitCards = getSuitCards(cards, suit_with_max_count);
+    // let totalVal = 0;
+    // count = 0;
+    // for (let c of suitCards) {
+    //   if (c[0] === 'J' || c[0] === '9') {
+    //     max_to_go_bid = Math.min(17, 16 + no_j);
+    //   }
+    //   if (c[0] === 'J') {
+    //     totalVal += 3;
+    //   }
+    //   if (c[0] === '9') {
+    //     totalVal += 2;
+    //   }
+    //   if (c[0] === '1' || c[0] === 'T') {
+    //     totalVal += 1;
+    //   }
+    // }
+    // if (max_to_go_bid === 0 && totalVal >= 3) {
+    //   max_to_go_bid = 16;
+    // }
   } else if (count_of_suit === 3) {
-    let suitCards = getSuitCards(cards, suit_with_max_count);
-    let totalVal = 0;
-    for (let c of suitCards) {
-      if (c[0] === 'J' || c[0] === '9') {
-        max_to_go_bid = 19;
-      }
-      if (c[0] === 'J') {
-        totalVal += 3;
-      }
-      if (c[0] === '9') {
-        totalVal += 2;
-      }
-      if (c[0] === '1' || c[0] === 'T') {
-        totalVal += 1;
-      }
-      if (totalVal === 0) {
-        max_to_go_bid = 0;
-      } else if (totalVal >= 3) {
-        max_to_go_bid = 18;
-      }
-    }
+    // let suitCards = getSuitCards(cards, suit_with_max_count);
+    // let totalVal = 0;
+    // for (let c of suitCards) {
+    //   if (c[0] === 'J' || c[0] === '9') {
+    //     max_to_go_bid = 19;
+    //   }
+    //   if (c[0] === 'J') {
+    //     totalVal += 3;
+    //   }
+    //   if (c[0] === '9') {
+    //     totalVal += 2;
+    //   }
+    //   if (c[0] === '1' || c[0] === 'T') {
+    //     totalVal += 1;
+    //   }
+    //   if (max_to_go_bid === 0) {
+    //     if (totalVal === 2) {
+    //       max_to_go_bid = 17;
+    //     } else if (totalVal >= 3) {
+    //       max_to_go_bid = 18;
+    //     }
+    //   }
+    // }
     max_to_go_bid = Math.min(18, 16 + no_j);
   } else if (count_of_suit === 4) {
-    let suitCards = getSuitCards(cards, suit_with_max_count);
-    let totalVal = 0;
-    for (let c of suitCards) {
-      if (c[0] === 'J') {
-        totalVal += 3;
-      }
-      if (c[0] === '9') {
-        totalVal += 2;
-      }
-      if (c[0] === '1' || c[0] === 'T') {
-        totalVal += 1;
-      }
-    }
-    if (totalVal >= 5) {
-      max_to_go_bid = 20;
-    } else if (totalVal === 4) {
-      max_to_go_bid = 19;
-    } else {
-      max_to_go_bid = 18;
-    }
+    max_to_go_bid = 19;
+    // let suitCards = getSuitCards(cards, suit_with_max_count);
+    // let totalVal = 0;
+    // for (let c of suitCards) {
+    //   if (c[0] === 'J') {
+    //     totalVal += 3;
+    //   }
+    //   if (c[0] === '9') {
+    //     totalVal += 2;
+    //   }
+    //   if (c[0] === '1' || c[0] === 'T') {
+    //     totalVal += 1;
+    //   }
+    // }
+    // if (totalVal >= 5) {
+    // } else if (totalVal === 4) {
+    //   max_to_go_bid = 20;
+    //   max_to_go_bid = 19;
+    // } else {
+    //   max_to_go_bid = 18;
+    // }
   }
-
   if (max_to_go_bid < 16) {
     return { bid: 0 };
   }

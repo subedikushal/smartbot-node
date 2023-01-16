@@ -27,6 +27,7 @@ let isFriendWinning = body => {
   var players = body['playerIds'];
   var own_cards = body['cards'];
   var till_played_cards = getTillPlayedCards(body);
+  console.log(till_played_cards);
   let player2 = players[(players.indexOf(playerId) + 1) % 4];
 
   var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
@@ -39,16 +40,22 @@ let isFriendWinning = body => {
     let key = card[1];
     count_of_own_cards[key] += 1;
   }
+  console.log(count_of_dropped_cards);
+  console.log(count_of_own_cards);
   var len_pc = played_cards.length;
+  console.log(len_pc);
 
   if (len_pc <= 1) return false;
 
   var friendCard = played_cards[0];
   var friendCardSuit = friendCard[1];
   let highestCard = getHighestCardInPlayedCards(body);
+  console.log(highestCard);
   if (len_pc === 2) {
     var cardsLost = getLostSuitByOther(body);
+    console.log(cardsLost);
     var sirOfFriendSuit = getSirOfSuit(body, friendCardSuit);
+    console.log(sirOfFriendSuit);
     if (friendCard !== highestCard) {
       return false;
     }
@@ -314,4 +321,5 @@ module.exports = {
   removeElement,
   randomChoice,
   isFriendWinning,
+  getSuitCardObj
 };

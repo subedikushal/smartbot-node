@@ -1,4 +1,4 @@
-const { last, getSuit, cardPriority } = require('./shared');
+const { last, getSuit, cardPriority, getSuitCards } = require('./shared');
 
 /**
  * @payload
@@ -27,6 +27,12 @@ function chooseTrump(payload) {
     }
     suitCount[card[1]] += 1;
   }
+  let suitWithSameCount = [];
+  for (let card of cards) {
+    if (suitCount[card[1]] === 2) {
+      suitWithSameCount.push(card[1]);
+    }
+  }
 
   // return suit with max count
   const suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
@@ -35,13 +41,39 @@ function chooseTrump(payload) {
 
   if (count_of_suit === 1) {
     return { suit: sortedCards[0][1] };
-  } else {
+  } else if (count_of_suit === 2) {
     for (let card of cards) {
-      if (card[1] === suit_with_max_count && card[0] === 'J') {
-        return { suit: card[1] };
+      if (suitCount[card[1]] === 2) {
+        if (card[0] === 'J') {
+          return { suit: card[1] };
+        }
       }
     }
-    return { suit: suit_with_max_count };
+    for (let card of cards) {
+      if (suitCount[card[1]] === 2) {
+        if (card[0] === '9') {
+          return { suit: card[1] };
+        }
+      }
+    }
+    for (let card of cards) {
+      if (suitCount[card[1]] === 2) {
+        if (card[0] === '1') {
+          return { suit: card[1] };
+        }
+      }
+    }
+
+    for (let card of cards) {
+      if (suitCount[card[1]] === 2) {
+        if (card[0] === 'T') {
+          return { suit: card[1] };
+        }
+      }
+    }
+    return { suit: sortedCards[0][1] };
+  } else {
+    return {suit:suit_with_max_count}
   }
 }
 
