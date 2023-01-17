@@ -157,6 +157,20 @@ let cardPriority = card => {
   return card_priority[cardRank];
 };
 
+let cardValue = card => {
+  const cardRank = card[0];
+  card_value = {
+    J: 3,
+    9: 2,
+    1: 1,
+    T: 1,
+    K: 0,
+    Q: 0,
+    8: 0,
+    7: 0,
+  };
+  return card_value[cardRank];
+};
 function getSuit(card) {
   return card[1];
 }
@@ -321,5 +335,6 @@ module.exports = {
   removeElement,
   randomChoice,
   isFriendWinning,
-  getSuitCardObj
+  getSuitCardObj,
+  cardValue,
 };

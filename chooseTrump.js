@@ -50,28 +50,11 @@ function chooseTrump(payload) {
       }
     }
     for (let card of cards) {
-      if (suitCount[card[1]] === 2) {
-        if (card[0] === '9') {
-          return { suit: card[1] };
-        }
+      if (card[0] === 'J') {
+        return { suit: card[1] };
       }
     }
-    for (let card of cards) {
-      if (suitCount[card[1]] === 2) {
-        if (card[0] === '1') {
-          return { suit: card[1] };
-        }
-      }
-    }
-
-    for (let card of cards) {
-      if (suitCount[card[1]] === 2) {
-        if (card[0] === 'T') {
-          return { suit: card[1] };
-        }
-      }
-    }
-    return { suit: sortedCards[0][1] };
+    return { suit: suit_with_max_count };
   } else {
     return {suit:suit_with_max_count}
   }

@@ -15,7 +15,7 @@
   }
  */
 
-const { getSuitCards } = require('./shared');
+const { getSuitCards, cardValue } = require('./shared');
 
 const MIN_BID = 16;
 
@@ -31,6 +31,9 @@ function bid(payload) {
   var challengerId = bidState.challengerId;
   var friendId = playerIds[(playerIds.indexOf(myId) + 2) % 4];
   var no_j = 0;
+  var no_9 = 0;
+  var no_1 = 0;
+  var no_t = 0;
   var suitCount = {
     S: 0,
     D: 0,
@@ -41,6 +44,15 @@ function bid(payload) {
     if (card[0] === 'J') {
       no_j += 1;
     }
+    if (card[0] === '9') {
+      no_9 += 1;
+    }
+    if (card[0] === '1') {
+      no_1 += 1;
+    }
+    if (card[0] === 'T') {
+      no_t += 1;
+    }
     suitCount[card[1]] += 1;
   }
 
@@ -50,116 +62,24 @@ function bid(payload) {
       suitWithSameCount.push(card[1]);
     }
   }
-  var toGoSuit;
-  if (suitWithSameCount.length === 2) {
-    let h = -100000000000;
-    for (let suit of suitWithSameCount) {
-      let suitCards = getSuitCards(cards, suit);
-      let total = 0;
-      for (let card of suitCards) {
-        if (card[0] === 'J') {
-          total += 3;
-        }
-        if (card[0] === '9') {
-          total += 2;
-        }
-        if (card[0] === 'T' || card[0] === '1') {
-          total += 1;
-        }
-      }
-      if (total > h) {
-        h = total;
-        toGoSuit = suit;
-      }
-    }
-  }
   // return suit with max count
   var suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
 
-  if (count_of_suit === 1 && no_j > 1) {
-    max_to_go_bid = 16;
-  }
   if (count_of_suit === 2) {
-    max_to_go_bid = Math.min(17, 15 + no_j);
-    // if (suitWithSameCount.length === 2) {
-    //   suit_with_max_count = toGoSuit;
-    // }
-    // let suitCards = getSuitCards(cards, suit_with_max_count);
-    // let totalVal = 0;
-    // count = 0;
-    // for (let c of suitCards) {
-    //   if (c[0] === 'J' || c[0] === '9') {
-    //     max_to_go_bid = Math.min(17, 16 + no_j);
-    //   }
-    //   if (c[0] === 'J') {
-    //     totalVal += 3;
-    //   }
-    //   if (c[0] === '9') {
-    //     totalVal += 2;
-    //   }
-    //   if (c[0] === '1' || c[0] === 'T') {
-    //     totalVal += 1;
-    //   }
-    // }
-    // if (max_to_go_bid === 0 && totalVal >= 3) {
-    //   max_to_go_bid = 16;
-    // }
+    max_to_go_bid = 15 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5;
   } else if (count_of_suit === 3) {
-    // let suitCards = getSuitCards(cards, suit_with_max_count);
-    // let totalVal = 0;
-    // for (let c of suitCards) {
-    //   if (c[0] === 'J' || c[0] === '9') {
-    //     max_to_go_bid = 19;
-    //   }
-    //   if (c[0] === 'J') {
-    //     totalVal += 3;
-    //   }
-    //   if (c[0] === '9') {
-    //     totalVal += 2;
-    //   }
-    //   if (c[0] === '1' || c[0] === 'T') {
-    //     totalVal += 1;
-    //   }
-    //   if (max_to_go_bid === 0) {
-    //     if (totalVal === 2) {
-    //       max_to_go_bid = 17;
-    //     } else if (totalVal >= 3) {
-    //       max_to_go_bid = 18;
-    //     }
-    //   }
-    // }
-    max_to_go_bid = Math.min(18, 16 + no_j);
+    max_to_go_bid = 16 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5;
   } else if (count_of_suit === 4) {
-    max_to_go_bid = 19;
-    // let suitCards = getSuitCards(cards, suit_with_max_count);
-    // let totalVal = 0;
-    // for (let c of suitCards) {
-    //   if (c[0] === 'J') {
-    //     totalVal += 3;
-    //   }
-    //   if (c[0] === '9') {
-    //     totalVal += 2;
-    //   }
-    //   if (c[0] === '1' || c[0] === 'T') {
-    //     totalVal += 1;
-    //   }
-    // }
-    // if (totalVal >= 5) {
-    // } else if (totalVal === 4) {
-    //   max_to_go_bid = 20;
-    //   max_to_go_bid = 19;
-    // } else {
-    //   max_to_go_bid = 18;
-    // }
+    max_to_go_bid = 17 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5;
   }
   if (max_to_go_bid < 16) {
     return { bid: 0 };
   }
 
   if (myId === defenderId && challengerBid <= max_to_go_bid) {
-    if (challengerId === friendId && challengerBid >= 17) {
+    if (challengerId === friendId && challengerBid >= 17 && count_of_suit === 2) {
       return { bid: 0 };
     }
     if (bidHistory.length === 3 && challengerBid === 0) {
@@ -173,7 +93,7 @@ function bid(payload) {
       };
     }
   } else if (myId === challengerId && defenderBid < max_to_go_bid) {
-    if (defenderId === friendId && defenderBid >= 17) {
+    if (defenderId === friendId && defenderBid >= 17 && count_of_suit === 2) {
       console.log(friendId);
       return { bid: 0 };
     }
