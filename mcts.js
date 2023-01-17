@@ -382,16 +382,16 @@ class GameState {
         if (cardPlayedCount[card] > 0) {
           ucbDict[card] =
             scoreDict[card] / cardPlayedCount[card] +
-            Math.sqrt((2 * Math.log(total_parent_visit)) / cardPlayedCount[card]);
+            (1 / Math.sqrt(2)) * Math.sqrt((2 * Math.log(total_parent_visit)) / cardPlayedCount[card]);
         }
       }
       var end = new Date().getTime();
       given_time -= end - start;
     }
-    // for (var card of legalMoves) {
-    //   ucbDict[card] = scoreDict[card] / cardPlayedCount[card];
-    // }
-    return scoreDict;
+    for (var card of legalMoves) {
+      ucbDict[card] = scoreDict[card] / cardPlayedCount[card];
+    }
+    return ucbDict;
   }
   scoreRandomPlay(given_time) {
     var scores = {};
@@ -442,7 +442,8 @@ class GameState {
       adjusted_time = time_for_simulation - 10;
     }
 
-    let play_data = this.scoreRandomPlay(adjusted_time);
+    // let play_data = this.scoreRandomPlay(adjusted_time);
+    let play_data = this.ucbRandomPlay(adjusted_time);
     let besters = Object.entries(play_data);
     let copyBesters = JSON.parse(JSON.stringify(besters));
     let sortedBesters = copyBesters.sort((a, b) => b[1] - a[1]);
