@@ -129,13 +129,6 @@ class GameState {
           toReturn = 0;
         }
       }
-      // if (!this.payload.trumpRevealed) {
-      //   if (toReturn > 0) {
-      //     return 0;
-      //   } else if (toReturn === 0) {
-      //     return 1;
-      //   }
-      // }
       return toReturn;
     }
   }
@@ -302,7 +295,9 @@ class GameState {
         this.payload['guessTrumpSuit'] = this.payload['trumpSuit'];
         this.payload['realness'] = true;
       } else {
-        this.payload['guessTrumpSuit'] = randomChoice(['C', 'D', 'H', 'S']);
+        let suits = ['C', 'D', 'H', 'S'];
+        suits = _.shuffle(suits);
+        this.payload['guessTrumpSuit'] = _.sample(suits);
         this.payload['realness'] = false;
       }
     }
@@ -402,7 +397,6 @@ class GameState {
     while (given_time > 0) {
       var start = new Date().getTime();
       this.randomlyDistribute();
-      // console.log(this.payload);
       for (let card of legalMoves) {
         var tempState = _.cloneDeep(this);
         tempState.makeAMove(card);
@@ -423,17 +417,17 @@ class GameState {
     let turns_to_play = 8 - this.payload['handsHistory'].length;
 
     let adjusted_time;
-    time_for_simulation -= 80;
+    time_for_simulation -= 50;
     if (this.payload['handsHistory'].length === 0) {
       adjusted_time = time_for_simulation / (turns_to_play - 1) + 100;
     } else if (this.payload['handsHistory'].length === 1) {
-      adjusted_time = time_for_simulation / (turns_to_play - 1) + 80;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
     } else if (this.payload['handsHistory'].length === 2) {
-      adjusted_time = time_for_simulation / (turns_to_play - 1) + 80;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
     } else if (this.payload['handsHistory'].length === 3) {
-      adjusted_time = time_for_simulation / (turns_to_play - 1) + 60;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
     } else if (this.payload['handsHistory'].length === 4) {
-      adjusted_time = time_for_simulation / (turns_to_play - 1) + 60;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 30;
     } else if (this.payload['handsHistory'].length === 5) {
       adjusted_time = time_for_simulation / (turns_to_play - 1) + 30;
     } else if (this.payload['handsHistory'].length === 6) {
@@ -476,6 +470,16 @@ class GameState {
       //   count_of_own_cards[key] += 1;
       // }
       if (count_of_dropped_cards[toMove[1]] === 0) {
+        return sortedBesters[1][0];
+      }
+    }
+    if (toMove[0] === '9' && this.payload.played.length === 1 && sortedBesters.length > 1) {
+      if (this.payload.played[0][0] === 'J' && this.payload.played[0][1] === toMove[1]) {
+        return sortedBesters[1][0];
+      }
+    }
+    if (toMove[0] === '9' && this.payload.played.length === 2 && sortedBesters.length > 1) {
+      if (this.payload.played[1][0] === 'J' && this.payload.played[1][1] === toMove[1]) {
         return sortedBesters[1][0];
       }
     }
