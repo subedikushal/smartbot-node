@@ -68,16 +68,15 @@ function bid(payload) {
   var max_to_go_bid = 0;
 
   if (count_of_suit === 2) {
-    max_to_go_bid = 15 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5;
+    max_to_go_bid = Math.min(17, Math.floor(15 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5));
   } else if (count_of_suit === 3) {
-    max_to_go_bid = 16 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5;
+    max_to_go_bid = Math.min(18, Math.floor(16 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5));
   } else if (count_of_suit === 4) {
-    max_to_go_bid = 17 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5;
+    max_to_go_bid = Math.min(19, Math.floor(17 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5));
   }
   if (max_to_go_bid < 16) {
     return { bid: 0 };
   }
-
   if (myId === defenderId && challengerBid <= max_to_go_bid) {
     if (challengerId === friendId && challengerBid >= 17 && count_of_suit === 2) {
       return { bid: 0 };
