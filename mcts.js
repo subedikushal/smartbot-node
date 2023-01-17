@@ -447,7 +447,7 @@ class GameState {
     let besters = Object.entries(play_data);
     let copyBesters = JSON.parse(JSON.stringify(besters));
     let sortedBesters = copyBesters.sort((a, b) => b[1] - a[1]);
-    // console.log(sortedBesters);
+    // console.log(this.payload.playerId, sortedBesters);
     let toMove;
     let highestScore = sortedBesters[0][1];
     var collection = [];
