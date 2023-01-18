@@ -47,10 +47,16 @@ function chooseTrump(payload) {
         if (card[0] === 'J') {
           return { suit: card[1] };
         }
+        if (card[0] === '9') {
+          return { suit: card[1] };
+        }
       }
     }
     for (let card of cards) {
       if (card[0] === 'J') {
+        return { suit: card[1] };
+      }
+      if (card[0] === '9') {
         return { suit: card[1] };
       }
     }

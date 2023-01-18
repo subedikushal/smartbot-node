@@ -66,13 +66,50 @@ function bid(payload) {
   var suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
-
-  if (count_of_suit === 2) {
-    max_to_go_bid = Math.min(17, Math.floor(15 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5));
+  if (count_of_suit === 1 && no_j >= 2) {
+    max_to_go_bid = 16;
+  } else if (count_of_suit === 2) {
+    var j_in_suit = 0;
+    var nine_in_suit = 0;
+    for (let card of cards) {
+      if (suitWithSameCount.includes(card[1])) {
+        if (card[0] === 'J') {
+          j_in_suit += 1;
+        }
+        if (card[0] === '9') {
+          nine_in_suit += 1;
+        }
+      }
+    }
+    max_to_go_bid = Math.min(16, Math.ceil(15 + j_in_suit + nine_in_suit * 0.5));
   } else if (count_of_suit === 3) {
-    max_to_go_bid = Math.min(18, Math.floor(16 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5));
+    var j_in_suit = 0;
+    var nine_in_suit = 0;
+    for (let card of cards) {
+      if (card[1] === suit_with_max_count) {
+        if (card[0] === 'J') {
+          j_in_suit += 1;
+        }
+        if (card[0] === '9') {
+          nine_in_suit += 1;
+        }
+      }
+    }
+    max_to_go_bid = Math.min(19, Math.ceil(17 + j_in_suit + nine_in_suit * 0.5));
   } else if (count_of_suit === 4) {
-    max_to_go_bid = Math.min(19, Math.floor(17 + no_j + no_9 * 0.5 + (no_1 + no_t) * 0.5));
+    var j_in_suit = 0;
+    var nine_in_suit = 0;
+    for (let card of cards) {
+      if (card[1] === suit_with_max_count) {
+        if (card[0] === 'J') {
+          j_in_suit += 1;
+        }
+        if (card[0] === '9') {
+          nine_in_suit += 1;
+        }
+      }
+    }
+    max_to_go_bid = Math.min(20, Math.ceil(18 + j_in_suit + nine_in_suit * 0.5));
   }
   if (max_to_go_bid < 16) {
     return { bid: 0 };

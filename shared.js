@@ -5,9 +5,13 @@ function last(items) {
 }
 
 let getSirOfSuit = (payload, suit) => {
-  var suitCardsObj = getSuitCardObj(payload);
-  orderedRanks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
-  var suitCards = suitCardsObj[suit];
+  var tillPlayedCards = getTillPlayedCards(payload);
+  var suitObj = { D: [], H: [], S: [], C: [] };
+  for (let card of tillPlayedCards) {
+    suitObj[card[1]].push(card);
+  }
+  var orderedRanks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
+  var suitCards = suitObj[suit];
   if (suitCards.length > 0) {
     for (let card of suitCards) {
       var rank = card[0];
@@ -27,7 +31,6 @@ let isFriendWinning = body => {
   var players = body['playerIds'];
   var own_cards = body['cards'];
   var till_played_cards = getTillPlayedCards(body);
-  console.log(till_played_cards);
   let player2 = players[(players.indexOf(playerId) + 1) % 4];
 
   var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
@@ -40,22 +43,16 @@ let isFriendWinning = body => {
     let key = card[1];
     count_of_own_cards[key] += 1;
   }
-  console.log(count_of_dropped_cards);
-  console.log(count_of_own_cards);
   var len_pc = played_cards.length;
-  console.log(len_pc);
 
   if (len_pc <= 1) return false;
 
-  var friendCard = played_cards[0];
-  var friendCardSuit = friendCard[1];
-  let highestCard = getHighestCardInPlayedCards(body);
-  console.log(highestCard);
   if (len_pc === 2) {
+    var friendCard = played_cards[0];
+    var friendCardSuit = friendCard[1];
+    let highestCard = getHighestCardInPlayedCards(body);
     var cardsLost = getLostSuitByOther(body);
-    console.log(cardsLost);
     var sirOfFriendSuit = getSirOfSuit(body, friendCardSuit);
-    console.log(sirOfFriendSuit);
     if (friendCard !== highestCard) {
       return false;
     }
@@ -90,6 +87,8 @@ let isFriendWinning = body => {
     return false;
   }
   if (len_pc === 3) {
+    var friendCard = played_cards[1];
+    let highestCard = getHighestCardInPlayedCards(body);
     if (highestCard === friendCard) {
       return true;
     }
@@ -153,6 +152,7 @@ let cardPriority = card => {
     Q: 0.2,
     8: 0.1,
     7: 0,
+    O: 3.1,
   };
   return card_priority[cardRank];
 };
@@ -245,7 +245,7 @@ function getPartnerIdx(myIdx) {
   return (myIdx + 2) % 4;
 }
 let getTillPlayedCards = payload => {
-  const handsHistory = payload.handsHistory;
+  var handsHistory = payload.handsHistory;
   var tillPlayedCards = [];
   for (let hand of handsHistory) {
     tillPlayedCards = tillPlayedCards.concat(hand[1]);

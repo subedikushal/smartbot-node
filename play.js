@@ -1,4 +1,4 @@
-const { getSuitCards, last, getSuit, pickWinningCardIdx, getPartnerIdx, isHigh } = require('./shared');
+const { getSuitCards, last, getSuit, pickWinningCardIdx, getPartnerIdx, isHigh, isFriendWinning } = require('./shared');
 GameState = require('./mcts.js');
 /**
  * @payload
@@ -32,7 +32,6 @@ GameState = require('./mcts.js');
   }
  */
 function play(payload) {
-  // console.log(payload.playerId, payload.timeRemaining);
   var currentState = new GameState(payload);
   currentState.oneTimeCall();
   move = currentState.show();
