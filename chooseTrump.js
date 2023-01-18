@@ -27,12 +27,13 @@ function chooseTrump(payload) {
     }
     suitCount[card[1]] += 1;
   }
-  let suitWithSameCount = [];
+  let suitWithSameCount = new Set();
   for (let card of cards) {
     if (suitCount[card[1]] === 2) {
-      suitWithSameCount.push(card[1]);
+      suitWithSameCount.add(card[1]);
     }
   }
+  suitWithSameCount = Array.from(suitWithSameCount);
 
   // return suit with max count
   const suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
@@ -42,27 +43,35 @@ function chooseTrump(payload) {
   if (count_of_suit === 1) {
     return { suit: sortedCards[0][1] };
   } else if (count_of_suit === 2) {
-    for (let card of cards) {
-      if (suitCount[card[1]] === 2) {
-        if (card[0] === 'J') {
-          return { suit: card[1] };
+    toGoSuit = suitWithSameCount[0];
+    if (suitWithSameCount.length === 2) {
+      var suit1 = suitWithSameCount[0];
+      var total1 = 0;
+      for (let card of cards) {
+        if (card[1] === suit1) {
+          total1 += cardPriority(card);
         }
-        if (card[0] === '9') {
-          return { suit: card[1] };
+      }
+
+      var total2 = 0;
+      var suit2 = suitWithSameCount[1];
+      for (let card of cards) {
+        if (card[1] === suit2) {
+          total2 += cardPriority(card);
         }
+      }
+
+      console.log(total1, total2);
+
+      if (total2 > total1) {
+        toGoSuit = suit2;
+      } else {
+        toGoSuit = suit1;
       }
     }
-    for (let card of cards) {
-      if (card[0] === 'J') {
-        return { suit: card[1] };
-      }
-      if (card[0] === '9') {
-        return { suit: card[1] };
-      }
-    }
-    return { suit: suit_with_max_count };
+    return { suit: toGoSuit };
   } else {
-    return {suit:suit_with_max_count}
+    return { suit: suit_with_max_count };
   }
 }
 

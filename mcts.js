@@ -377,7 +377,7 @@ class GameState {
         if (cardPlayedCount[card] > 0) {
           ucbDict[card] =
             scoreDict[card] / cardPlayedCount[card] +
-            (1 / Math.sqrt(2)) * Math.sqrt((2 * Math.log(total_parent_visit)) / cardPlayedCount[card]);
+            1.207 * Math.sqrt(Math.log(total_parent_visit) / cardPlayedCount[card]);
         }
       }
       var end = new Date().getTime();
@@ -417,7 +417,7 @@ class GameState {
     let turns_to_play = 8 - this.payload['handsHistory'].length;
 
     let adjusted_time;
-    time_for_simulation -= 50;
+    time_for_simulation -= 100;
     if (this.payload['handsHistory'].length === 0) {
       adjusted_time = time_for_simulation / (turns_to_play - 1) + 120;
     } else if (this.payload['handsHistory'].length === 1) {
@@ -436,24 +436,15 @@ class GameState {
       adjusted_time = time_for_simulation - 10;
     }
 
-    // let play_data = this.scoreRandomPlay(adjusted_time);
-    let play_data = this.ucbRandomPlay(adjusted_time);
-    let besters = Object.entries(play_data);
+    var playData = this.ucbRandomPlay(adjusted_time);
+    let besters = Object.entries(playData);
     let copyBesters = JSON.parse(JSON.stringify(besters));
     let sortedBesters = copyBesters.sort((a, b) => b[1] - a[1]);
-    // console.log(this.payload.playerId, sortedBesters);
     let toMove;
     let highestScore = sortedBesters[0][1];
     var collection = [];
-    // console.log(sortedBesters);
     toMove = sortedBesters[0][0];
 
-    if (sortedBesters[0][0] === 'OT' && sortedBesters[0][1] < 0.25) {
-      sortedBesters.sort((a, b) => {
-        cardPriority[b] - cardPriority[a];
-      });
-      return _.last(sortedBesters)[0];
-    }
     if (toMove[0] === '9' && this.payload.played.length === 0) {
       var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
       var till_played_cards = getTillPlayedCards(this.payload);
@@ -461,7 +452,7 @@ class GameState {
         let key = card[1];
         count_of_dropped_cards[key] += 1;
       }
-      if (count_of_dropped_cards[toMove[1]] === 0) {
+      if (count_of_dropped_cards[toMove[1]] < 4) {
         return sortedBesters[1][0];
       }
     }
@@ -472,13 +463,12 @@ class GameState {
       }
     }
 
-    if (
-      toMove[0] === '9' &&
-      this.payload.played.length === 2 &&
-      sortedBesters.length > 1 &&
-      !isFriendWinning(this.payload)
-    ) {
-      if (this.payload.played[1][0] === 'J' && this.payload.played[1][1] === toMove[1]) {
+    if (toMove[0] === '9' && this.payload.played.length === 2 && sortedBesters.length > 1) {
+      if (
+        this.payload.played[1][0] === 'J' &&
+        this.payload.played[1][1] === toMove[1] &&
+        !isFriendWinning(this.payload)
+      ) {
         return sortedBesters[1][0];
       }
     }
@@ -491,11 +481,10 @@ class GameState {
 
     if (collection.length > 1) {
       collection.sort((a, b) => cardPriority(b[0]) - cardPriority(a[0]));
-      if (isFriendWinning(this.payload)) {
-        toMove = collection[0][0];
-      } else {
-        toMove = _.last(collection)[0];
+      if (collection[0][0] === 'OT') {
+        return collection[0][0];
       }
+      toMove = _.last(collection)[0];
     } else {
       toMove = sortedBesters[0][0];
     }
