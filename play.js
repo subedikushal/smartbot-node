@@ -32,7 +32,12 @@ GameState = require('./mcts.js');
   }
  */
 function play(payload) {
+  // console.log(payload.playerId, payload.timeRemaining);
+  // console.log(payload.cards.length);
+  // console.log(payload.played);
+  // console.log(payload.playerId, isFriendWinning(payload));
   var currentState = new GameState(payload);
+
   currentState.oneTimeCall();
   move = currentState.show();
   if (move === 'OT') {

@@ -43,7 +43,7 @@ function chooseTrump(payload) {
   if (count_of_suit === 1) {
     return { suit: sortedCards[0][1] };
   } else if (count_of_suit === 2) {
-    toGoSuit = suitWithSameCount[0];
+    var toGoSuit = suitWithSameCount[0];
     if (suitWithSameCount.length === 2) {
       var suit1 = suitWithSameCount[0];
       var total1 = 0;
@@ -60,8 +60,6 @@ function chooseTrump(payload) {
           total2 += cardPriority(card);
         }
       }
-
-      console.log(total1, total2);
 
       if (total2 > total1) {
         toGoSuit = suit2;

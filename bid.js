@@ -69,9 +69,10 @@ function bid(payload) {
   var max_to_go_bid = 0;
   if (count_of_suit === 2) {
     if (suitWithSameCount.length > 1) {
-      let j_in_suit = 0;
-      let nine_in_suit = 0;
-      let A_in_suit = 0;
+      var j_in_suit = 0;
+      var nine_in_suit = 0;
+      var A_in_suit = 0;
+      var T_in_suit = 0;
       let suit1 = suitWithSameCount[0];
       let max1 = 0;
       for (let card of cards) {
@@ -85,13 +86,17 @@ function bid(payload) {
           if (card[0] === '1') {
             A_in_suit += 1;
           }
+          if (card[0] === 'T') {
+            T_in_suit += 1;
+          }
         }
       }
-      max1 = Math.ceil(15 + j_in_suit + nine_in_suit * 0.5);
+      max1 = 15 + j_in_suit + nine_in_suit;
 
       j_in_suit = 0;
       nine_in_suit = 0;
       A_in_suit = 0;
+      T_in_suit = 0;
       let max2 = 0;
       let suit2 = suitWithSameCount[0];
       for (let card of cards) {
@@ -105,14 +110,18 @@ function bid(payload) {
           if (card[0] === '1') {
             A_in_suit += 1;
           }
+          if (card[0] === 'T') {
+            T_in_suit += 1;
+          }
         }
       }
-      max2 = Math.ceil(15 + j_in_suit + nine_in_suit * 0.5);
-      max_to_go_bid = Math.min(16, max1, max2);
+      max2 = 15 + j_in_suit + nine_in_suit;
+      max_to_go_bid = Math.max(max1, max2);
     } else if (suitWithSameCount.length === 1) {
       let j_in_suit = 0;
       let nine_in_suit = 0;
       let A_in_suit = 0;
+      let T_in_suit = 0;
       let suit1 = suitWithSameCount[0];
       for (let card of cards) {
         if (card[1] === suit1) {
@@ -125,9 +134,12 @@ function bid(payload) {
           if (card[0] === '1') {
             A_in_suit += 1;
           }
+          if (card[0] === 'T') {
+            T_in_suit += 1;
+          }
         }
       }
-      max_to_go_bid = Math.min(16, Math.ceil(15 + j_in_suit + nine_in_suit * 0.5));
+      max_to_go_bid = 15 + j_in_suit + nine_in_suit;
     }
   } else if (count_of_suit === 3) {
     var j_in_suit = 0;
@@ -150,7 +162,7 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = Math.floor(17 + j_in_suit + (nine_in_suit + A_in_suit + T_in_suit) * 0.5);
+    max_to_go_bid = 16 + j_in_suit + nine_in_suit;
   } else if (count_of_suit === 4) {
     var j_in_suit = 0;
     var nine_in_suit = 0;
@@ -172,7 +184,7 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = Math.floor(18 + j_in_suit + (nine_in_suit + A_in_suit + T_in_suit) * 0.5);
+    max_to_go_bid = 17 + j_in_suit + nine_in_suit;
   }
   if (max_to_go_bid < 16) {
     return { bid: 0 };
