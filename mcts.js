@@ -110,7 +110,11 @@ class GameState {
         }
       }
       if (!trumpRevealed) {
-        return 0;
+        if (toReturn === 1) {
+          return 0;
+        } else {
+          return 1;
+        }
       }
       return toReturn;
     }
@@ -149,6 +153,10 @@ class GameState {
       if (didIRevealTheTrumpInThisHand) {
         if (myTrumpCards.length === 0) {
           return myCards;
+        }
+
+        if (isFriendWinning(this.payload)) {
+          return myTrumpCards;
         }
 
         // get highest card in the played cards
@@ -342,7 +350,7 @@ class GameState {
     for (let move of legalMoves) {
       scoreDict[move] = 0;
       cardPlayedCount[move] = 0;
-      ucbDict[move] = Infinity;
+      ucbDict[move] = 10000;
     }
     var total_parent_visit = 0;
     // let i = 0;
@@ -403,24 +411,24 @@ class GameState {
     let time_for_simulation = this.payload['timeRemaining'];
     let turns_to_play = 8 - this.payload['handsHistory'].length;
 
-    let adjusted_time;
-    if (this.payload['handsHistory'].length === 0) {
-      adjusted_time = 265;
-    } else if (this.payload['handsHistory'].length === 1) {
-      adjusted_time = 255;
-    } else if (this.payload['handsHistory'].length === 2) {
-      adjusted_time = 230;
-    } else if (this.payload['handsHistory'].length === 3) {
-      adjusted_time = 180;
-    } else if (this.payload['handsHistory'].length === 4) {
-      adjusted_time = 180;
-    } else if (this.payload['handsHistory'].length === 5) {
-      adjusted_time = time_for_simulation / turns_to_play + 20;
-    } else if (this.payload['handsHistory'].length === 6) {
-      adjusted_time = (time_for_simulation - 10) / turns_to_play;
-    } else if (this.payload['handsHistory'].length === 7) {
-      adjusted_time = (time_for_simulation - 10) / turns_to_play;
-    }
+    let adjusted_time = (time_for_simulation - 50) / turns_to_play + turns_to_play * 15;
+    // if (this.payload['handsHistory'].length === 0) {
+    //   adjusted_time = 220;
+    // } else if (this.payload['handsHistory'].length === 1) {
+    //   adjusted_time = 220;
+    // } else if (this.payload['handsHistory'].length === 2) {
+    //   adjusted_time = 220;
+    // } else if (this.payload['handsHistory'].length === 3) {
+    //   adjusted_time = 200;
+    // } else if (this.payload['handsHistory'].length === 4) {
+    //   adjusted_time = 180;
+    // } else if (this.payload['handsHistory'].length === 5) {
+    //   adjusted_time = time_for_simulation / turns_to_play + 40;
+    // } else if (this.payload['handsHistory'].length === 6) {
+    //   adjusted_time = (time_for_simulation - 10) / turns_to_play;
+    // } else if (this.payload['handsHistory'].length === 7) {
+    //   adjusted_time = (time_for_simulation - 10) / turns_to_play;
+    // }
 
     var playData = this.ucbRandomPlay(adjusted_time);
     let besters = Object.entries(playData);
@@ -431,17 +439,17 @@ class GameState {
     var collection = [];
     toMove = sortedBesters[0][0];
 
-    if (toMove[0] === '9' && this.payload.played.length === 0) {
-      var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
-      var till_played_cards = getTillPlayedCards(this.payload);
-      for (let card of till_played_cards) {
-        let key = card[1];
-        count_of_dropped_cards[key] += 1;
-      }
-      if (count_of_dropped_cards[toMove[1]] < 4) {
-        return sortedBesters[1][0];
-      }
-    }
+    // if (toMove[0] === '9' && this.payload.played.length === 0) {
+    //   var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
+    //   var till_played_cards = getTillPlayedCards(this.payload);
+    //   for (let card of till_played_cards) {
+    //     let key = card[1];
+    //     count_of_dropped_cards[key] += 1;
+    //   }
+    //   if (count_of_dropped_cards[toMove[1]] < 4) {
+    //     return sortedBesters[1][0];
+    //   }
+    // }
 
     if (toMove[0] === '9' && this.payload.played.length === 1 && sortedBesters.length > 1) {
       if (this.payload.played[0][0] === 'J' && this.payload.played[0][1] === toMove[1]) {
@@ -459,24 +467,24 @@ class GameState {
       }
     }
 
-    for (let b of sortedBesters) {
-      if (b[1] === highestScore) {
-        collection.push(b);
-      }
-    }
+    // for (let b of sortedBesters) {
+    //   if (b[1] === highestScore) {
+    //     collection.push(b);
+    //   }
+    // }
 
-    if (collection.length > 1) {
-      collection.sort((a, b) => cardPriority(b[0]) - cardPriority(a[0]));
-      if (collection[0][0] === 'OT' && collection[0][1] !== 0) {
-        return collection[0][0];
-      }
-      if (isFriendWinning(this.payload)) {
-        return collection[0][0];
-      }
-      toMove = _.last(collection)[0];
-    } else {
-      toMove = sortedBesters[0][0];
-    }
+    // if (collection.length > 1) {
+    //   collection.sort((a, b) => cardPriority(b[0]) - cardPriority(a[0]));
+    //   if (collection[0][0] === 'OT' && collection[0][1] !== 0) {
+    //     return collection[0][0];
+    //   }
+    //   if (isFriendWinning(this.payload)) {
+    //     return sortedBesters[0][0];
+    //   }
+    //   toMove = _.last(collection)[0];
+    // } else {
+    //   toMove = sortedBesters[0][0];
+    // }
     return toMove;
   }
 }
