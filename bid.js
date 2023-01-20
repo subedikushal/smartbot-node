@@ -68,11 +68,8 @@ function bid(payload) {
   var suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
-  if (count_of_suit === 1 && no_j >= 1) {
-    max_to_go_bid = 16;
-  }
   if (count_of_suit === 2) {
-    if (suitWithSameCount.length > 1) {
+    if (suitWithSameCount.length === 2) {
       var j_in_suit = 0;
       var nine_in_suit = 0;
       var A_in_suit = 0;
@@ -96,13 +93,12 @@ function bid(payload) {
         }
       }
       max1 = 15 + j_in_suit + nine_in_suit;
-
       j_in_suit = 0;
       nine_in_suit = 0;
       A_in_suit = 0;
       T_in_suit = 0;
       let max2 = 0;
-      let suit2 = suitWithSameCount[0];
+      let suit2 = suitWithSameCount[1];
       for (let card of cards) {
         if (card[1] === suit2) {
           if (card[0] === 'J') {
@@ -111,26 +107,14 @@ function bid(payload) {
           if (card[0] === '9') {
             nine_in_suit += 1;
           }
-          if (card[0] === '1') {
-            A_in_suit += 1;
-          }
-          if (card[0] === 'T') {
-            T_in_suit += 1;
-          }
         }
       }
       max2 = 15 + j_in_suit + nine_in_suit;
       max_to_go_bid = Math.max(max1, max2);
-      // if (max_to_go_bid < 16) {
-      //   if (bidHistory.length === 0) {
-      //     max_to_go_bid = 16;
-      //   }
-      // }
+      max_to_go_bid = Math.min(16, max_to_go_bid);
     } else if (suitWithSameCount.length === 1) {
       let j_in_suit = 0;
       let nine_in_suit = 0;
-      let A_in_suit = 0;
-      let T_in_suit = 0;
       let suit1 = suitWithSameCount[0];
       for (let card of cards) {
         if (card[1] === suit1) {
@@ -140,20 +124,10 @@ function bid(payload) {
           if (card[0] === '9') {
             nine_in_suit += 1;
           }
-          if (card[0] === '1') {
-            A_in_suit += 1;
-          }
-          if (card[0] === 'T') {
-            T_in_suit += 1;
-          }
         }
       }
       max_to_go_bid = 15 + j_in_suit + nine_in_suit;
-      // if (max_to_go_bid < 16) {
-      //   if (bidHistory.length === 0) {
-      //     max_to_go_bid = 16;
-      //   }
-      // }
+      max_to_go_bid = Math.min(16, max_to_go_bid);
     }
   } else if (count_of_suit === 3) {
     var j_in_suit = 0;
@@ -176,7 +150,7 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = 17 + j_in_suit + nine_in_suit;
+    max_to_go_bid = 16 + j_in_suit + nine_in_suit;
   } else if (count_of_suit === 4) {
     var j_in_suit = 0;
     var nine_in_suit = 0;
@@ -198,42 +172,37 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = 18 + j_in_suit + nine_in_suit;
+    max_to_go_bid = 17 + j_in_suit + nine_in_suit;
   }
-  if (max_to_go_bid < 16) {
-    if (bidHistory.length === 0) {
-      max_to_go_bid = 16;
-    } else {
-      return { bid: 0 };
-    }
-  }
-  if (myId === defenderId && challengerBid <= max_to_go_bid) {
-    if (challengerId === friendId && challengerBid >= 17) {
-      return { bid: 0 };
-    }
-    if (bidHistory.length === 3 && challengerBid === 0) {
-      return { bid: MIN_BID };
-    }
-    if (challengerBid === 0) {
-      return { bid: MIN_BID };
-    } else {
-      return {
-        bid: challengerBid,
-      };
-    }
-  } else if (myId === challengerId && defenderBid < max_to_go_bid) {
-    if (defenderId === friendId && defenderBid >= 17) {
-      return { bid: 0 };
-    }
-    if (bidHistory.length === 3 && defenderBid === 0) {
-      return { bid: MIN_BID };
-    }
-    if (defenderBid === 0) {
-      return { bid: MIN_BID };
-    } else {
-      return {
-        bid: defenderBid + 1,
-      };
+  if (max_to_go_bid >= 16) {
+    if (myId === defenderId && challengerBid <= max_to_go_bid) {
+      if (challengerId === friendId && count_of_suit === 2) {
+        return { bid: 0 };
+      }
+      if (bidHistory.length === 3 && challengerBid === 0) {
+        return { bid: MIN_BID };
+      }
+      if (challengerBid === 0) {
+        return { bid: MIN_BID };
+      } else {
+        return {
+          bid: challengerBid,
+        };
+      }
+    } else if (myId === challengerId && defenderBid < max_to_go_bid) {
+      if (defenderId === friendId && count_of_suit === 2) {
+        return { bid: 0 };
+      }
+      if (bidHistory.length === 3 && defenderBid === 0) {
+        return { bid: MIN_BID };
+      }
+      if (defenderBid === 0) {
+        return { bid: MIN_BID };
+      } else {
+        return {
+          bid: defenderBid + 1,
+        };
+      }
     }
   }
   return { bid: 0 };

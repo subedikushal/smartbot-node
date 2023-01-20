@@ -284,14 +284,14 @@ let getLostSuitByOther = payload => {
     }
     thirdCard = eachHand[1][1];
     if (thirdCard[1] !== starterCardSuit) {
-      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 2) % 4];
       if (cardPlayer !== playerId) {
         cardsLost[cardPlayer].add(starterCardSuit);
       }
     }
     forthCard = eachHand[1][1];
     if (forthCard[1] !== starterCardSuit) {
-      let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
+      let cardPlayer = players[(players.indexOf(starterPlayer) + 3) % 4];
       if (cardPlayer !== playerId) {
         cardsLost[cardPlayer].add(starterCardSuit);
       }

@@ -61,14 +61,14 @@ class GameState {
   //     if (bidders['won'] >= bidders['bid']) {
   //       if (bidders['players'].includes(GameState.MAX_1) || bidders['players'].includes(GameState.MAX_2)) {
   //         //we are winning
-  //         return bidders['won'];
+  //         return bidders['won'] / 28;
   //       } else {
   //         return 0;
   //       }
   //       // if we are the bid winner
   //     } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
   //       if (nonBidders['players'].includes(GameState.MAX_1) || nonBidders['players'].includes(GameState.MAX_2)) {
-  //         return nonBidders['won'];
+  //         return nonBidders['won'] / 28;
   //       } else {
   //         return 0;
   //       }
@@ -109,13 +109,14 @@ class GameState {
           toReturn = 0;
         }
       }
-      // if (!trumpRevealed) {
-      //   if (toReturn === 1) {
-      //     return 0;
-      //   } else {
-      //     return 1;
-      //   }
-      // }
+      if (!trumpRevealed) {
+        return 0;
+        if (toReturn === 1) {
+          return 0;
+        } else {
+          return 1;
+        }
+      }
       return toReturn;
     }
   }
@@ -243,20 +244,20 @@ class GameState {
     while (remainingCards.length > 0) {
       let randomCard = _.sample(remainingCards);
       let randomCardSuit = getSuit(randomCard);
-      // if (!cardsLost[player2].has(randomCardSuit) && p2CanGet > 0) {
-      //   this.payload[player2].push(randomCard);
-      //   removeElement(remainingCards, randomCard);
-      //   p2CanGet -= 1;
-      // } else if (!cardsLost[player3].has(randomCardSuit) && p3CanGet > 0) {
-      //   this.payload[player3].push(randomCard);
-      //   removeElement(remainingCards, randomCard);
-      //   p3CanGet -= 1;
-      // } else if (!cardsLost[player4].has(randomCardSuit) && p4CanGet > 0) {
-      //   this.payload[player4].push(randomCard);
-      //   removeElement(remainingCards, randomCard);
-      //   p4CanGet -= 1;
-      // }
-      // } else if (p2CanGet > 0) {
+      if (!cardsLost[player2].has(randomCardSuit) && p2CanGet > 0) {
+        this.payload[player2].push(randomCard);
+        removeElement(remainingCards, randomCard);
+        p2CanGet -= 1;
+      } else if (!cardsLost[player3].has(randomCardSuit) && p3CanGet > 0) {
+        this.payload[player3].push(randomCard);
+        removeElement(remainingCards, randomCard);
+        p3CanGet -= 1;
+      } else if (!cardsLost[player4].has(randomCardSuit) && p4CanGet > 0) {
+        this.payload[player4].push(randomCard);
+        removeElement(remainingCards, randomCard);
+        p4CanGet -= 1;
+      }
+      //  else if (p2CanGet > 0) {
       //   this.payload[player2].push(randomCard);
       //   removeElement(remainingCards, randomCard);
       //   p2CanGet -= 1;
@@ -269,19 +270,19 @@ class GameState {
       //   removeElement(remainingCards, randomCard);
       //   p4CanGet -= 1;
       // }
-      // else if (p2CanGet < p3CanGet && p2CanGet < p4CanGet && p2CanGet > 0) {
-      //   this.payload[player2].push(randomCard);
-      //   removeElement(remainingCards, randomCard);
-      //   p2CanGet -= 1;
-      // } else if (p3CanGet < p2CanGet && p3CanGet < p4CanGet && p3CanGet > 0) {
-      //   this.payload[player3].push(randomCard);
-      //   removeElement(remainingCards, randomCard);
-      //   p3CanGet -= 1;
-      // } else if (p4CanGet < p2CanGet && p4CanGet < p3CanGet && p4CanGet > 0) {
-      //   this.payload[player4].push(randomCard);
-      //   removeElement(remainingCards, randomCard);
-      //   p4CanGet -= 1;
-      if (p2CanGet > 0) {
+      else if (p2CanGet < p3CanGet && p2CanGet < p4CanGet && p2CanGet > 0) {
+        this.payload[player2].push(randomCard);
+        removeElement(remainingCards, randomCard);
+        p2CanGet -= 1;
+      } else if (p3CanGet < p2CanGet && p3CanGet < p4CanGet && p3CanGet > 0) {
+        this.payload[player3].push(randomCard);
+        removeElement(remainingCards, randomCard);
+        p3CanGet -= 1;
+      } else if (p4CanGet < p2CanGet && p4CanGet < p3CanGet && p4CanGet > 0) {
+        this.payload[player4].push(randomCard);
+        removeElement(remainingCards, randomCard);
+        p4CanGet -= 1;
+      } else if (p2CanGet > 0) {
         this.payload[player2].push(randomCard);
         removeElement(remainingCards, randomCard);
         p2CanGet -= 1;
@@ -366,11 +367,11 @@ class GameState {
       ucbDict[move] = 10000;
     }
     var total_parent_visit = 0;
-    // let i = 0;
+    let i = 0;
     var end = new Date().getTime();
     given_time -= end - start;
     while (given_time > 0) {
-      // i += 1;
+      i += 1;
       // for (let i = 0; i < 1100; i++) {
       var start = new Date().getTime();
       this.randomlyDistribute();
@@ -390,9 +391,13 @@ class GameState {
       var end = new Date().getTime();
       given_time -= end - start;
     }
+    // console.log(cardPlayedCount);
     for (var card of legalMoves) {
       ucbDict[card] = scoreDict[card] / cardPlayedCount[card];
     }
+    // console.log(scoreDict);
+    // console.log(ucbDict);
+
     // console.log('Total iterations:', i);
     return ucbDict;
   }
@@ -428,7 +433,7 @@ class GameState {
     let adjusted_time;
     time_for_simulation -= 50;
     if (this.payload['handsHistory'].length === 0) {
-      adjusted_time = time_for_simulation / (turns_to_play - 1) + 120;
+      adjusted_time = time_for_simulation / (turns_to_play - 1) + 100;
     } else if (this.payload['handsHistory'].length == 1) {
       adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
     } else if (this.payload['handsHistory'].length === 2) {
@@ -440,7 +445,7 @@ class GameState {
     } else if (this.payload['handsHistory'].length === 5) {
       adjusted_time = time_for_simulation / (turns_to_play - 1) + 30;
     } else if (this.payload['handsHistory'].length === 6) {
-      adjusted_time = time_for_simulation / (turns_to_play - 1) + 10;
+      adjusted_time = 0.6 * time_for_simulation;
     } else if (this.payload['handsHistory'].length === 7) {
       adjusted_time = time_for_simulation - 10;
     }
@@ -454,6 +459,8 @@ class GameState {
     let highestScore = sortedBesters[0][1];
     var collection = [];
     toMove = sortedBesters[0][0];
+    // console.log(sortedBesters);
+    // console.log(toMove);
 
     if (toMove[0] === '9' && this.payload.played.length === 0) {
       var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
@@ -499,6 +506,9 @@ class GameState {
       ) {
         return sortedBesters[1][0];
       }
+      if (isFriendWinning(this.payload)) {
+        return toMove;
+      }
     }
 
     for (let b of sortedBesters) {
@@ -522,5 +532,4 @@ class GameState {
     return toMove;
   }
 }
-
 module.exports = GameState;
