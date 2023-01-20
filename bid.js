@@ -15,6 +15,7 @@
   }
  */
 
+const { max } = require('lodash');
 const { getSuitCards, cardValue } = require('./shared');
 
 const MIN_BID = 16;
@@ -67,6 +68,9 @@ function bid(payload) {
   var suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
+  if (count_of_suit === 1 && no_j >= 1) {
+    max_to_go_bid = 16;
+  }
   if (count_of_suit === 2) {
     if (suitWithSameCount.length > 1) {
       var j_in_suit = 0;
@@ -117,6 +121,11 @@ function bid(payload) {
       }
       max2 = 15 + j_in_suit + nine_in_suit;
       max_to_go_bid = Math.max(max1, max2);
+      // if (max_to_go_bid < 16) {
+      //   if (bidHistory.length === 0) {
+      //     max_to_go_bid = 16;
+      //   }
+      // }
     } else if (suitWithSameCount.length === 1) {
       let j_in_suit = 0;
       let nine_in_suit = 0;
@@ -140,6 +149,11 @@ function bid(payload) {
         }
       }
       max_to_go_bid = 15 + j_in_suit + nine_in_suit;
+      // if (max_to_go_bid < 16) {
+      //   if (bidHistory.length === 0) {
+      //     max_to_go_bid = 16;
+      //   }
+      // }
     }
   } else if (count_of_suit === 3) {
     var j_in_suit = 0;
@@ -162,7 +176,7 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = 16 + j_in_suit + nine_in_suit;
+    max_to_go_bid = 17 + j_in_suit + nine_in_suit;
   } else if (count_of_suit === 4) {
     var j_in_suit = 0;
     var nine_in_suit = 0;
@@ -184,12 +198,19 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = 17 + j_in_suit + nine_in_suit;
+    max_to_go_bid = 18 + j_in_suit + nine_in_suit;
   }
   if (max_to_go_bid < 16) {
-    return { bid: 0 };
+    if (bidHistory.length === 0) {
+      max_to_go_bid = 16;
+    } else {
+      return { bid: 0 };
+    }
   }
   if (myId === defenderId && challengerBid <= max_to_go_bid) {
+    if (challengerId === friendId && challengerBid >= 17) {
+      return { bid: 0 };
+    }
     if (bidHistory.length === 3 && challengerBid === 0) {
       return { bid: MIN_BID };
     }
@@ -201,6 +222,9 @@ function bid(payload) {
       };
     }
   } else if (myId === challengerId && defenderBid < max_to_go_bid) {
+    if (defenderId === friendId && defenderBid >= 17) {
+      return { bid: 0 };
+    }
     if (bidHistory.length === 3 && defenderBid === 0) {
       return { bid: MIN_BID };
     }
