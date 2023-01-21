@@ -1,13 +1,4 @@
-const {
-  getSuitCards,
-  last,
-  getSuit,
-  pickWinningCardIdx,
-  getPartnerIdx,
-  isHigh,
-  isFriendWinning,
-  getLostSuitByOther,
-} = require('./shared');
+const { getTotalValue, getSuitCards } = require('./shared');
 GameState = require('./mcts.js');
 /**
  * @payload
@@ -45,6 +36,13 @@ function play(payload) {
   // console.log(payload.cards.length);
   // console.log(payload.played);
   // console.log(payload.playerId, isFriendWinning(payload));
+  if (payload.played.length > 0) {
+    let suitCards = getSuitCards(payload.cards, payload.played[0][1]);
+    if (suitCards.length === 0 && !payload['trumpRevealed']) {
+      return { revealTrump: true };
+    }
+  }
+
   var currentState = new GameState(payload);
   // lost = getLostSuitByOther(payload);
   // console.log(lost);

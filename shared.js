@@ -24,6 +24,13 @@ let getSirOfSuit = (payload, suit) => {
   return null;
 };
 
+let getTotalValue = cards => {
+  let total = 0;
+  for (let card of cards) {
+    total += cardValue(card);
+  }
+  return total;
+};
 let isFriendWinning = body => {
   var played_cards = body['played'];
   var playerId = body['playerId'];
@@ -338,4 +345,5 @@ module.exports = {
   getSuitCardObj,
   cardValue,
   getSirOfSuit,
+  getTotalValue,
 };

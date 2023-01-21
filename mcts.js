@@ -11,6 +11,7 @@ const {
   removeElement,
   isFriendWinning,
   getSirOfSuit,
+  getTotalValue,
 } = require('./shared');
 
 class GameState {
@@ -109,14 +110,14 @@ class GameState {
           toReturn = 0;
         }
       }
-      if (!trumpRevealed) {
-        return 0;
-        if (toReturn === 1) {
-          return 0;
-        } else {
-          return 1;
-        }
-      }
+      // if (!trumpRevealed) {
+      //   return 0;
+      //   if (toReturn === 1) {
+      //     return 0;
+      //   } else {
+      //     return 1;
+      //   }
+      // }
       return toReturn;
     }
   }
@@ -351,7 +352,11 @@ class GameState {
   randomPlay() {
     while (this.payload.handsHistory.length < 8) {
       var legalMoves = this.getLegalMoves();
+      // if (legalMoves.includes('OT')) {
+      //   this.makeAMove('OT');
+      // } else {
       this.makeAMove(_.sample(legalMoves));
+      // }
     }
     return this.terminalValue();
   }
@@ -384,8 +389,10 @@ class GameState {
       total_parent_visit += 1;
       for (var card of legalMoves) {
         if (cardPlayedCount[card] > 0) {
-          ucbDict[card] =
-            scoreDict[card] / cardPlayedCount[card] + Math.sqrt(Math.log(total_parent_visit) / cardPlayedCount[card]);
+          let c = 0.5;
+          let exploitation = scoreDict[card] / cardPlayedCount[card];
+          let exploration = c * Math.sqrt(Math.log(total_parent_visit) / cardPlayedCount[card]);
+          ucbDict[card] = exploitation + exploration;
         }
       }
       var end = new Date().getTime();
@@ -445,7 +452,7 @@ class GameState {
     } else if (this.payload['handsHistory'].length === 5) {
       adjusted_time = time_for_simulation / (turns_to_play - 1) + 30;
     } else if (this.payload['handsHistory'].length === 6) {
-      adjusted_time = 0.6 * time_for_simulation;
+      adjusted_time = 0.75 * time_for_simulation;
     } else if (this.payload['handsHistory'].length === 7) {
       adjusted_time = time_for_simulation - 10;
     }
@@ -462,73 +469,70 @@ class GameState {
     // console.log(sortedBesters);
     // console.log(toMove);
 
-    if (toMove[0] === '9' && this.payload.played.length === 0) {
-      var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
-      var till_played_cards = getTillPlayedCards(this.payload);
-      for (let card of till_played_cards) {
-        let key = card[1];
-        count_of_dropped_cards[key] += 1;
-      }
-      var count_of_own_cards = { S: 0, D: 0, H: 0, C: 0 };
-      for (let card of this.payload.cards) {
-        let key = card[1];
-        count_of_own_cards[key] += 1;
-      }
-      if (trumpSuit) {
-        let sir = getSirOfSuit(this.payload, toMove[1]);
-        if (sir === toMove && toMove[1] === trumpSuit) {
-          return toMove;
-        }
-        if (count_of_dropped_cards[trumpSuit] + count_of_own_cards[trumpSuit] === 8) {
-          return toMove;
-        }
-      }
-      if (count_of_dropped_cards[toMove[1]] >= 0) {
-        for (let b of sortedBesters) {
-          if (b[0][0] !== '9') {
-            return b[0];
-          }
-        }
-      }
-    }
+    // if (toMove[0] === '9' && this.payload.played.length === 0) {
+    //   var count_of_dropped_cards = { S: 0, D: 0, H: 0, C: 0 };
+    //   var till_played_cards = getTillPlayedCards(this.payload);
+    //   for (let card of till_played_cards) {
+    //     let key = card[1];
+    //     count_of_dropped_cards[key] += 1;
+    //   }
+    //   var count_of_own_cards = { S: 0, D: 0, H: 0, C: 0 };
+    //   for (let card of this.payload.cards) {
+    //     let key = card[1];
+    //     count_of_own_cards[key] += 1;
+    //   }
+    //   if (trumpSuit) {
+    //     let sir = getSirOfSuit(this.payload, toMove[1]);
+    //     if (sir === toMove && toMove[1] === trumpSuit) {
+    //       return toMove;
+    //     }
+    //     if (count_of_dropped_cards[trumpSuit] + count_of_own_cards[trumpSuit] === 8) {
+    //       return toMove;
+    //     }
+    //   }
+    //   if (count_of_dropped_cards[toMove[1]] >= 0) {
+    //     for (let b of sortedBesters) {
+    //       if (b[0][0] !== '9') {
+    //         return b[0];
+    //       }
+    //     }
+    //   }
+    // }
 
-    if (toMove[0] === '9' && this.payload.played.length === 1 && sortedBesters.length > 1) {
-      if (this.payload.played[0][0] === 'J' && this.payload.played[0][1] === toMove[1]) {
-        return sortedBesters[1][0];
-      }
-    }
+    // if (toMove[0] === '9' && this.payload.played.length === 1 && sortedBesters.length > 1) {
+    //   if (this.payload.played[0][0] === 'J' && this.payload.played[0][1] === toMove[1]) {
+    //     return sortedBesters[1][0];
+    //   }
+    // }
 
-    if (toMove[0] === '9' && this.payload.played.length === 2 && sortedBesters.length > 1) {
-      if (
-        this.payload.played[1][0] === 'J' &&
-        this.payload.played[1][1] === toMove[1] &&
-        !isFriendWinning(this.payload)
-      ) {
-        return sortedBesters[1][0];
-      }
-      if (isFriendWinning(this.payload)) {
-        return toMove;
-      }
-    }
+    // if (toMove[0] === '9' && this.payload.played.length === 2 && sortedBesters.length > 1) {
+    //   if (
+    //     this.payload.played[1][0] === 'J' &&
+    //     this.payload.played[1][1] === toMove[1] &&
+    //     !isFriendWinning(this.payload)
+    //   ) {
+    //     return sortedBesters[1][0];
+    //   }
+    // }
 
-    for (let b of sortedBesters) {
-      if (b[1] === highestScore) {
-        collection.push(b);
-      }
-    }
+    // for (let b of sortedBesters) {
+    //   if (b[1] === highestScore) {
+    //     collection.push(b);
+    //   }
+    // }
 
-    if (collection.length > 1) {
-      collection.sort((a, b) => cardPriority(b[0]) - cardPriority(a[0]));
-      if (collection[0][0] === 'OT' && collection[0][1] !== 0) {
-        return collection[0][0];
-      }
-      if (isFriendWinning(this.payload)) {
-        return sortedBesters[0][0];
-      }
-      toMove = _.last(collection)[0];
-    } else {
-      toMove = sortedBesters[0][0];
-    }
+    // if (collection.length > 1) {
+    //   collection.sort((a, b) => cardPriority(b[0]) - cardPriority(a[0]));
+    //   if (collection[0][0] === 'OT' && collection[0][1] !== 0) {
+    //     return collection[0][0];
+    //   }
+    //   if (isFriendWinning(this.payload)) {
+    //     return sortedBesters[0][0];
+    //   }
+    //   toMove = _.last(collection)[0];
+    // } else {
+    //   toMove = sortedBesters[0][0];
+    // }
     return toMove;
   }
 }
