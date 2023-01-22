@@ -1,5 +1,6 @@
 const { last, getSuit, cardPriority, getSuitCards } = require('./shared');
 
+const _ = require('lodash');
 /**
  * @payload
   {

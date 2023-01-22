@@ -15,8 +15,7 @@
   }
  */
 
-const { max } = require('lodash');
-const { getSuitCards, cardValue } = require('./shared');
+const _ = require('lodash');
 
 const MIN_BID = 16;
 
@@ -68,6 +67,9 @@ function bid(payload) {
   var suit_with_max_count = Object.keys(suitCount).reduce((a, b) => (suitCount[a] > suitCount[b] ? a : b));
   const count_of_suit = suitCount[suit_with_max_count];
   var max_to_go_bid = 0;
+  if (count_of_suit === 1 && no_j >= 1) {
+    max_to_go_bid = 16;
+  }
   if (count_of_suit === 2) {
     if (suitWithSameCount.length === 2) {
       var j_in_suit = 0;
@@ -150,7 +152,7 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = 16 + j_in_suit + nine_in_suit;
+    max_to_go_bid = 16 + j_in_suit + nine_in_suit + A_in_suit;
   } else if (count_of_suit === 4) {
     var j_in_suit = 0;
     var nine_in_suit = 0;
@@ -172,7 +174,7 @@ function bid(payload) {
         }
       }
     }
-    max_to_go_bid = 17 + j_in_suit + nine_in_suit;
+    max_to_go_bid = 17 + j_in_suit + nine_in_suit + A_in_suit;
   }
   if (max_to_go_bid >= 16) {
     if (myId === defenderId && challengerBid <= max_to_go_bid) {
