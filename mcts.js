@@ -98,13 +98,13 @@ class GameState {
         if (bidders['players'].includes(this.MAX_1) || bidders['players'].includes(this.MAX_2)) {
           toReturn = 1;
         } else if (bidders['players'].includes(this.MIN_1) || bidders['players'].includes(this.MIN_2)) {
-          toReturn = 0;
+          toReturn = -1;
         }
       } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
         if (nonBidders['players'].includes(this.MAX_1) || nonBidders['players'].includes(this.MAX_2)) {
           toReturn = 1;
         } else if (nonBidders['players'].includes(this.MIN_1) || nonBidders['players'].includes(this.MIN_2)) {
-          toReturn = 0;
+          toReturn = -1;
         }
       }
       if (!this.payload.trumpRevealed) {

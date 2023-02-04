@@ -33,7 +33,7 @@ MCTS = require('./newmcts.js');
   }
  */
 function play(payload) {
-  console.log(payload.playerId, payload.timeRemaining);
+  // console.log(payload.playerId, payload.timeRemaining);
   // console.log(payload.cards.length);
   // console.log(payload.played);
   // console.log(payload.playerId, isFriendWinning(payload));
@@ -47,10 +47,30 @@ function play(payload) {
   //     }
   //   }
   // }
+  let time_for_simulation = payload['timeRemaining'] - 50;
+  let turns_to_play = 8 - payload['handsHistory'].length;
+  let adjusted_time;
+  if (payload['handsHistory'].length === 0) {
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 180;
+  } else if (payload['handsHistory'].length == 1) {
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 70;
+  } else if (payload['handsHistory'].length === 2) {
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 70;
+  } else if (payload['handsHistory'].length === 3) {
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 70;
+  } else if (payload['handsHistory'].length === 4) {
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
+  } else if (payload['handsHistory'].length === 5) {
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
+  } else if (payload['handsHistory'].length === 6) {
+    adjusted_time = (time_for_simulation + 30) / turns_to_play;
+  } else if (payload['handsHistory'].length === 7) {
+    adjusted_time = time_for_simulation - 10;
+  }
   var currentState = new GameState(payload);
   currentState.oneTimeCall();
   let mcts = new MCTS(currentState);
-  let move = mcts.search();
+  let move = mcts.search(adjusted_time);
   // let move = currentState.show();
   if (move === 'OT') {
     return { revealTrump: true };

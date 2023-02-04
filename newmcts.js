@@ -4,6 +4,8 @@ class TreeNode {
     this.playerId = playerId;
     this.availability = 0;
     this.visits = 0;
+    this.maxWins = 0;
+    this.minWins = 0;
     this.score = 0;
     this.childrens = {};
     this.parent = parent;
@@ -24,7 +26,7 @@ class TreeNode {
 }
 
 class MCTS {
-  static maxIterations = 500;
+  static maxIterations = 600;
   static gameState = null;
   constructor(gameState) {
     this.rootNode = new TreeNode(gameState.payload.playerId);
@@ -41,34 +43,42 @@ class MCTS {
     } else if (node.parent.playerId === MCTS.gameState.MIN_1 || node.parent.playerId === MCTS.gameState.MIN_2) {
       currPlayer = -1;
     }
-    let exploitation = (currPlayer * node.score) / node.visits;
+    // console.log(currPlayer, node.playerId, node.parent.playerId);
+    let exploitation;
+    if (currPlayer === -1) {
+      exploitation = (node.minWins - node.maxWins) / node.visits;
+    } else if (currPlayer === 1) {
+      exploitation = (node.maxWins - node.minWins) / node.visits;
+    }
     let exploration = c * Math.sqrt(Math.log(node.availability) / node.visits);
     let ucb = exploitation + exploration;
     return ucb;
   }
-  search() {
+  search(givenTime) {
     this.changeGameState(this.rootGameState);
     let lm = MCTS.gameState.getLegalMoves();
     if (lm.length === 1) {
       return lm[0];
     }
     // Four stage of ISMCTS
-    for (let i = 0; i < MCTS.maxIterations; i++) {
+    while (givenTime > 2) {
+      var start = new Date().getTime();
       this.rootGameState.randomlyDistribute();
-      let copy = _.cloneDeep(this.rootGameState);
-      this.changeGameState(copy);
+      this.changeGameState(this.rootGameState);
       let node = this.select(this.rootNode);
-
-      //simulation
       let s = this.rollout(node);
-      //backprop
       this.backpropagate(node, s);
+      var dur = new Date().getTime() - start;
+      givenTime -= dur;
     }
+
+    // console.log(MCTS.gameState.payload);
+    // this.rootGameState = MCTS.gameState;
 
     let data = [];
     for (let move of Object.keys(this.rootNode.childrens)) {
       let cN = this.rootNode.childrens[move];
-      data.push([move, cN.score / cN.visits, cN.score, cN.visits]);
+      data.push([move, (cN.maxWins - cN.minWins) / cN.visits, cN.maxWins - cN.minWins, cN.visits]);
     }
     data.sort((a, b) => b[1] - a[1]);
     return data[0][0];
@@ -76,8 +86,6 @@ class MCTS {
 
   select(node) {
     while (!MCTS.gameState.isTerminal()) {
-      //current gameState lealmoves
-      // console.log(MCTS.gameState.payload);
       let legalMoves = MCTS.gameState.getLegalMoves();
       let childrens = Object.keys(node.childrens);
       let fullyExpanded = true;
@@ -92,7 +100,6 @@ class MCTS {
         }
       }
       if (fullyExpanded) {
-        // console.log('selection');
         for (let move of childrens) {
           if (legalMoves.includes(move)) {
             node.childrens[move].availability += 1;
@@ -100,12 +107,6 @@ class MCTS {
         }
         node = this.getBestUCBNode(node);
       } else {
-        for (let move of childrens) {
-          if (legalMoves.includes(move)) {
-            node.childrens[move].availability += 1;
-          }
-        }
-        // console.log('expansion');
         return this.expand(node);
       }
     }
@@ -117,13 +118,10 @@ class MCTS {
     let bestMoves = [];
     let nodeChildrens = Object.keys(node.childrens);
     let legalMoves = MCTS.gameState.getLegalMoves();
-    // console.log(nodeChildrens);
-    // console.log(legalMoves);
     for (let move of nodeChildrens) {
       if (legalMoves.includes(move)) {
         let child = node.childrens[move];
         let ucb = this.getUCB(child, c);
-        // console.log(move, ucb);
         if (ucb > bestUCB) {
           bestUCB = ucb;
           bestMoves = [move];
@@ -143,10 +141,9 @@ class MCTS {
     let legalMoves = MCTS.gameState.getLegalMoves();
     for (let move of legalMoves) {
       if (!Object.keys(node.childrens).includes(move)) {
-        let cloneGS = _.cloneDeep(MCTS.gameState);
-        cloneGS.makeAMove(move);
-        let newNode = new TreeNode(cloneGS.payload.playerId, node);
-        newNode.availability += 1;
+        MCTS.gameState.makeAMove(move);
+        let newNode = new TreeNode(MCTS.gameState.payload.playerId, node);
+        newNode.availability = 1;
         node.childrens[move] = newNode;
         return newNode;
       }
@@ -165,7 +162,13 @@ class MCTS {
     // console.log('backprop');
     while (node != null) {
       node.visits += 1;
+      if (score === 1) {
+        node.maxWins += 1;
+      } else if (score === -1) {
+        node.minWins += 1;
+      }
       node.score += score;
+
       node = node.parent;
     }
     // console.log('***************');
