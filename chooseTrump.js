@@ -68,6 +68,19 @@ function chooseTrump(payload) {
         toGoSuit = suit1;
       }
     }
+    let haveJ = false;
+    for (let card of cards) {
+      if (card[1] === toGoSuit && card[0] === 'J') {
+        haveJ = true;
+      }
+    }
+    if (!haveJ) {
+      for (let card of cards) {
+        if (card[0] === 'J') {
+          return { suit: card[1] };
+        }
+      }
+    }
     return { suit: toGoSuit };
   } else {
     return { suit: suit_with_max_count };

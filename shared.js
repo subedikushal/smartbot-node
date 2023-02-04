@@ -212,8 +212,7 @@ let isFriendWinning = body => {
   return false;
 };
 
-let getSuitCardObj = payload => {
-  cards = payload.cards;
+let getSuitCardObj = cards => {
   suitCardObj = {
     D: [],
     H: [],
@@ -373,7 +372,18 @@ function randomChoice(arr) {
   const randomIndex = Math.floor(Math.random() * arr.length);
   return arr[randomIndex];
 }
-
+let nextPlayerMap = (players, playerId) => {
+  map = {};
+  let myIdx = players.indexOf(playerId);
+  let player2 = players[(myIdx + 1) % 4];
+  let player3 = players[(myIdx + 2) % 4];
+  let player4 = players[(myIdx + 3) % 4];
+  map[playerId] = player2;
+  map[player2] = player3;
+  map[player3] = player4;
+  map[player4] = playerId;
+  return map;
+};
 let getLostSuitByOther = payload => {
   let playerId = payload.playerId;
   let players = payload.playerIds;
@@ -456,4 +466,5 @@ module.exports = {
   getSirOfSuit,
   getTotalValue,
   getPlayCard,
+  nextPlayerMap,
 };

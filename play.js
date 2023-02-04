@@ -1,5 +1,6 @@
 const { getTotalValue, getSuitCards, isFriendWinning } = require('./shared');
 GameState = require('./mcts.js');
+MCTS = require('./newmcts.js');
 /**
  * @payload
   {
@@ -32,26 +33,25 @@ GameState = require('./mcts.js');
   }
  */
 function play(payload) {
-  // console.log(payload.playerId, payload.timeRemaining);
+  console.log(payload.playerId, payload.timeRemaining);
   // console.log(payload.cards.length);
   // console.log(payload.played);
   // console.log(payload.playerId, isFriendWinning(payload));
-  if (payload.played.length > 0) {
-    let suitCards = getSuitCards(payload.cards, payload.played[0][1]);
-    if (suitCards.length === 0) {
-      if (!payload.trumpRevealed && getTotalValue(payload.played) > 0 && !isFriendWinning(payload)) {
-        return {
-          revealTrump: true,
-        };
-      }
-    }
-  }
+  // if (payload.played.length > 0) {
+  //   let suitCards = getSuitCards(payload.cards, payload.played[0][1]);
+  //   if (suitCards.length === 0) {
+  //     if (!payload.trumpRevealed && getTotalValue(payload.played) > 0) {
+  //       return {
+  //         revealTrump: true,
+  //       };
+  //     }
+  //   }
+  // }
   var currentState = new GameState(payload);
-  // lost = getLostSuitByOther(payload);
-  // console.log(lost);
-
   currentState.oneTimeCall();
-  move = currentState.show();
+  let mcts = new MCTS(currentState);
+  let move = mcts.search();
+  // let move = currentState.show();
   if (move === 'OT') {
     return { revealTrump: true };
   } else {

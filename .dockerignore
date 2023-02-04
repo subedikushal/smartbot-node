@@ -6,3 +6,4 @@ node_modules/
 .gitignore
 prettier.config.js
 test.js
+*.py
