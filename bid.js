@@ -180,12 +180,12 @@ function bid(payload) {
       }
     }
     if (j_in_suit > 0) {
-      max_to_go_bid = 20;
+      max_to_go_bid = 19;
     } else {
-      if (getTotalValue(cards) >= 1) {
-        max_to_go_bid = 18;
-      } else {
+      if (getTotalValue(cards) === 0) {
         max_to_go_bid = 16;
+      } else {
+        max_to_go_bid = 18;
       }
     }
   } else if (count_of_suit === 4) {
@@ -212,10 +212,10 @@ function bid(payload) {
     if (j_in_suit > 0) {
       max_to_go_bid = 20;
     } else {
-      if (getTotalValue(cards) <= 1) {
-        max_to_go_bid = 17;
-      } else if (getTotalValue(cards) >= 2) {
-        max_to_go_bid = 19;
+      if (getTotalValue(cards) == 0) {
+        max_to_go_bid = 16;
+      } else {
+        max_to_go_bid = 18;
       }
     }
   }

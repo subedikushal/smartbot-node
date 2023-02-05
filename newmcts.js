@@ -37,6 +37,7 @@ class MCTS {
     } else if (currPlayer === 1) {
       exploitation = node.maxWins / node.visits;
     }
+    // let exploration = c * Math.sqrt(Math.log(this.rootNode.visits) / node.visits);
     let exploration = c * Math.sqrt(Math.log(node.availability) / node.visits);
     let ucb = exploitation + exploration;
     return ucb;
