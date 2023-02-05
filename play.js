@@ -51,7 +51,7 @@ function play(payload) {
   let turns_to_play = 8 - payload['handsHistory'].length;
   let adjusted_time;
   if (turns_to_play >= 4) {
-    adjusted_time = (0.26 + (0.1 - 0.01 * turns_to_play)) * time_for_simulation;
+    adjusted_time = (0.29 + (0.1 - 0.01 * turns_to_play)) * time_for_simulation;
   } else {
     adjusted_time = (0.32 + (0.04 - 0.01 * turns_to_play)) * time_for_simulation;
   }

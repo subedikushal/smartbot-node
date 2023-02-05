@@ -93,7 +93,7 @@ class MCTS {
             node.childrens[move].availability += 1;
           }
         }
-        node = this.getBestUCBNode(node, Math.sqrt(2));
+        node = this.getBestUCBNode(node, 0.5 * Math.sqrt(2));
       } else {
         return this.expand(node);
       }
