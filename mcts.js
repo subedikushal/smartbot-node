@@ -61,14 +61,14 @@ class GameState {
         if (bidders['players'].includes(this.MAX_1) || bidders['players'].includes(this.MAX_2)) {
           toReturn = bidders['won'] / 28;
         } else {
-          toReturn = 0;
+          toReturn = -nonBidders['won'] / 28;
         }
       } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
         if (nonBidders['players'].includes(this.MAX_1) || nonBidders['players'].includes(this.MAX_2)) {
           // toReturn = nonBidders['won'] / (GameState.MAX_BID_VALUE + 1 - bidValue);
           toReturn = nonBidders['won'] / 28;
         } else {
-          toReturn = 0;
+          toReturn = -bidders['won'] / 28;
         }
       }
       if (!trumpRevealed) {
@@ -98,23 +98,38 @@ class GameState {
       if (bidders['won'] >= bidders['bid']) {
         if (bidders['players'].includes(this.MAX_1) || bidders['players'].includes(this.MAX_2)) {
           toReturn = 1;
+          if (!this.payload.trumpRevealed) {
+            return -1;
+          }
         } else if (bidders['players'].includes(this.MIN_1) || bidders['players'].includes(this.MIN_2)) {
+          if (!this.payload.trumpRevealed) {
+            return 1;
+          }
           toReturn = -1;
         }
       } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
         if (nonBidders['players'].includes(this.MAX_1) || nonBidders['players'].includes(this.MAX_2)) {
+          if (!this.payload.trumpRevealed) {
+            return -1;
+          }
           toReturn = 1;
         } else if (nonBidders['players'].includes(this.MIN_1) || nonBidders['players'].includes(this.MIN_2)) {
+          if (!this.payload.trumpRevealed) {
+            return 1;
+          }
           toReturn = -1;
         }
-      }
-      if (!this.payload.trumpRevealed) {
-        return 0;
       }
       return toReturn;
     }
     return false;
   }
+  // isTerminal() {
+  //   if (this.terminalValue() === 1 || this.terminalValue() === -1 || this.terminalValue() === 0) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
   isTerminal() {
     if (this.terminalValue() === 1 || this.terminalValue() === -1 || this.terminalValue() === 0) {
       return true;

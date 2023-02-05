@@ -23,7 +23,7 @@ class MCTS {
   changeGameState(gameState) {
     MCTS.gameState = _.cloneDeep(gameState);
   }
-  getUCB(node, c = Math.sqrt(2)) {
+  getUCB(node, c) {
     let currPlayer;
     if (node.parent.playerId === MCTS.gameState.MAX_1 || node.parent.playerId === MCTS.gameState.MAX_2) {
       currPlayer = 1;
@@ -48,9 +48,13 @@ class MCTS {
       return lm[0];
     }
     // Four stage of ISMCTS
-    while (givenTime > 2) {
+    let i = 0;
+    while (givenTime > 1) {
+      i++;
       var start = new Date().getTime();
       this.rootGameState.bipartite_distribute();
+      // this.rootGameState.randomlyDistribute();
+      // this.rootGameState.randomlyDistributeWithoutLostSuit();
       this.changeGameState(this.rootGameState);
       let node = this.select(this.rootNode);
       let s = this.rollout(node);
@@ -58,14 +62,15 @@ class MCTS {
       var dur = new Date().getTime() - start;
       givenTime -= dur;
     }
+    // console.log('Total iterations:', i);
 
     let data = [];
     for (let move of Object.keys(this.rootNode.childrens)) {
       let cN = this.rootNode.childrens[move];
-      data.push([move, cN.maxWins]);
+      data.push([move, cN.maxWins, cN.visits, cN.maxWins / cN.visits]);
     }
     data.sort((a, b) => b[1] - a[1]);
-    console.log(data);
+    // console.log(data);
     return data[0][0];
   }
 
@@ -88,7 +93,7 @@ class MCTS {
             node.childrens[move].availability += 1;
           }
         }
-        node = this.getBestUCBNode(node);
+        node = this.getBestUCBNode(node, Math.sqrt(2));
       } else {
         return this.expand(node);
       }
@@ -96,7 +101,7 @@ class MCTS {
     return node;
   }
 
-  getBestUCBNode(node, c = Math.sqrt(2)) {
+  getBestUCBNode(node, c) {
     let bestUCB = -Infinity;
     let bestMoves = [];
     let nodeChildrens = Object.keys(node.childrens);
@@ -135,10 +140,7 @@ class MCTS {
   }
 
   rollout(node) {
-    // console.log('Rollout');
-    let gS = _.cloneDeep(MCTS.gameState);
-    let s = gS.randomPlay();
-    return s;
+    return MCTS.gameState.randomPlay();
   }
 
   backpropagate(node, score) {
@@ -151,7 +153,6 @@ class MCTS {
         node.minWins += 1;
       }
       node.score += score;
-
       node = node.parent;
     }
     // console.log('***************');

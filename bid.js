@@ -15,6 +15,7 @@
   }
  */
 
+const { max } = require('lodash');
 const _ = require('lodash');
 const { getTotalValue } = require('./shared');
 
@@ -72,9 +73,9 @@ function bid(payload) {
     let totalValue = getTotalValue(cards);
     if (no_j > 0) {
       max_to_go_bid = 15.73 + totalValue / 11;
-      if (max_to_go_bid >= 16.5) {
+      if (max_to_go_bid > 16.5) {
         max_to_go_bid = 17;
-      } else if (max_to_go_bid >= 16 && max_to_go_bid < 16.5) {
+      } else if (max_to_go_bid >= 16 && max_to_go_bid <= 16.5) {
         max_to_go_bid = 16;
       }
     }
@@ -103,7 +104,7 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max1 = 15 + j_in_suit + nine_in_suit + (no_j - j_in_suit);
+        max1 = 16 + j_in_suit + nine_in_suit;
       }
       j_in_suit = 0;
       nine_in_suit = 0;
@@ -128,7 +129,7 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max2 = 15 + j_in_suit + nine_in_suit + (no_j - j_in_suit);
+        max2 = 16 + j_in_suit + nine_in_suit;
       }
       max_to_go_bid = Math.max(max1, max2);
     } else if (suitWithSameCount.length === 1) {
@@ -154,7 +155,7 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max_to_go_bid = 15 + j_in_suit + nine_in_suit + (no_j - j_in_suit);
+        max_to_go_bid = 16 + j_in_suit + nine_in_suit;
       }
     }
   } else if (count_of_suit === 3) {
@@ -179,9 +180,13 @@ function bid(payload) {
       }
     }
     if (j_in_suit > 0) {
-      max_to_go_bid = 17 + j_in_suit + nine_in_suit + (no_j - j_in_suit);
+      max_to_go_bid = 20;
     } else {
-      max_to_go_bid = 17;
+      if (getTotalValue(cards) >= 1) {
+        max_to_go_bid = 18;
+      } else {
+        max_to_go_bid = 16;
+      }
     }
   } else if (count_of_suit === 4) {
     var j_in_suit = 0;
@@ -205,9 +210,13 @@ function bid(payload) {
       }
     }
     if (j_in_suit > 0) {
-      max_to_go_bid = 18 + j_in_suit + nine_in_suit;
+      max_to_go_bid = 20;
     } else {
-      max_to_go_bid = 18;
+      if (getTotalValue(cards) <= 1) {
+        max_to_go_bid = 17;
+      } else if (getTotalValue(cards) >= 2) {
+        max_to_go_bid = 19;
+      }
     }
   }
 
