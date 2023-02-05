@@ -8,6 +8,7 @@ const {
   getSuit,
   removeElement,
   isFriendWinning,
+  getTotalValue,
 } = require('./shared');
 
 class GameState {
@@ -132,6 +133,9 @@ class GameState {
     if (playedCards.length === 0) {
       return myCards;
     }
+    if (playedCards[0] == null) {
+      console.log(this.payload);
+    }
     // console.log(playedCards.length);
 
     // console.log(playedCards);
@@ -182,6 +186,49 @@ class GameState {
       }
     }
     return myCards;
+  }
+  getWinningMoves() {
+    let legalMoves = this.getLegalMoves();
+    let currentlyPlayedCards = this.payload.played;
+    if (currentlyPlayedCards.length > 0) {
+      if (legalMoves.length === 1) {
+        return legalMoves;
+      }
+      let winningCards = [];
+      let highedCardPlayed = getHighestCardInPlayedCards(this.payload);
+      if (legalMoves.includes('OT')) {
+        if (isFriendWinning(this.payload)) {
+          removeElement(legalMoves, 'OT');
+          return legalMoves;
+        }
+        if (getTotalValue(currentlyPlayedCards) > 0) {
+          winningCards.push('OT');
+          return winningCards;
+        } else {
+          return legalMoves;
+        }
+      }
+
+      for (let move of legalMoves) {
+        if (move[1] === highedCardPlayed[1] && cardPriority(move) > cardPriority(highedCardPlayed)) {
+          winningCards.push(move);
+        }
+      }
+      if (winningCards.length > 0) {
+        return winningCards;
+      }
+      for (let move of legalMoves) {
+        if (move[1] === this.payload.trumpSuit && highedCardPlayed[1] !== this.payload.trumpSuit) {
+          winningCards.push(move);
+        }
+      }
+      if (winningCards.length > 0) {
+        return winningCards;
+      }
+
+      return legalMoves;
+    }
+    return legalMoves;
   }
   bipartite_distribute() {
     const suits = ['C', 'D', 'H', 'S'];
@@ -661,13 +708,8 @@ class GameState {
         }
       }
 
-      var legalMoves = this.getLegalMoves();
-      // console.log('inside random play');
+      var legalMoves = this.getWinningMoves();
       let toMove = _.sample(legalMoves);
-      // console.log(legalMoves, toMove);
-      // if (legalMoves.length === 0) {
-      //   console.log(this.payload);
-      // }
       this.makeAMove(toMove);
     }
     return this.terminalValue();

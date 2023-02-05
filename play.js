@@ -51,15 +51,15 @@ function play(payload) {
   let turns_to_play = 8 - payload['handsHistory'].length;
   let adjusted_time;
   if (payload['handsHistory'].length === 0) {
-    adjusted_time = time_for_simulation / (turns_to_play - 1) + 180;
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 140;
   } else if (payload['handsHistory'].length == 1) {
-    adjusted_time = time_for_simulation / (turns_to_play - 1) + 70;
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
   } else if (payload['handsHistory'].length === 2) {
-    adjusted_time = time_for_simulation / (turns_to_play - 1) + 70;
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 80;
   } else if (payload['handsHistory'].length === 3) {
     adjusted_time = time_for_simulation / (turns_to_play - 1) + 70;
   } else if (payload['handsHistory'].length === 4) {
-    adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
+    adjusted_time = time_for_simulation / (turns_to_play - 1) + 50;
   } else if (payload['handsHistory'].length === 5) {
     adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
   } else if (payload['handsHistory'].length === 6) {

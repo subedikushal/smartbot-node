@@ -10,19 +10,6 @@ class TreeNode {
     this.childrens = {};
     this.parent = parent;
   }
-  // isFE() {
-  //   if (this.gameState.isTerminal()) {
-  //     return true;
-  //   }
-  //   let legalMoves = this.gameState.getLegalMoves();
-  //   let childrenMoves = Object.keys(this.childrens);
-  //   for (let m of legalMoves) {
-  //     if (!childrenMoves.includes(m)) {
-  //       return false;
-  //     }
-  //   }
-  //   return true;
-  // }
 }
 
 class MCTS {
@@ -46,9 +33,9 @@ class MCTS {
     // console.log(currPlayer, node.playerId, node.parent.playerId);
     let exploitation;
     if (currPlayer === -1) {
-      exploitation = (node.minWins - node.maxWins) / node.visits;
+      exploitation = node.minWins / node.visits;
     } else if (currPlayer === 1) {
-      exploitation = (node.maxWins - node.minWins) / node.visits;
+      exploitation = node.maxWins / node.visits;
     }
     let exploration = c * Math.sqrt(Math.log(node.availability) / node.visits);
     let ucb = exploitation + exploration;
@@ -63,7 +50,7 @@ class MCTS {
     // Four stage of ISMCTS
     while (givenTime > 2) {
       var start = new Date().getTime();
-      this.rootGameState.randomlyDistribute();
+      this.rootGameState.bipartite_distribute();
       this.changeGameState(this.rootGameState);
       let node = this.select(this.rootNode);
       let s = this.rollout(node);
@@ -72,15 +59,13 @@ class MCTS {
       givenTime -= dur;
     }
 
-    // console.log(MCTS.gameState.payload);
-    // this.rootGameState = MCTS.gameState;
-
     let data = [];
     for (let move of Object.keys(this.rootNode.childrens)) {
       let cN = this.rootNode.childrens[move];
-      data.push([move, (cN.maxWins - cN.minWins) / cN.visits, cN.maxWins - cN.minWins, cN.visits]);
+      data.push([move, cN.maxWins]);
     }
     data.sort((a, b) => b[1] - a[1]);
+    console.log(data);
     return data[0][0];
   }
 
@@ -89,16 +74,14 @@ class MCTS {
       let legalMoves = MCTS.gameState.getLegalMoves();
       let childrens = Object.keys(node.childrens);
       let fullyExpanded = true;
-      if (MCTS.gameState.isTerminal()) {
-        fullyExpanded = true;
-      } else {
-        for (let m of legalMoves) {
-          if (!childrens.includes(m)) {
-            fullyExpanded = false;
-            break;
-          }
+
+      for (let m of legalMoves) {
+        if (!childrens.includes(m)) {
+          fullyExpanded = false;
+          break;
         }
       }
+
       if (fullyExpanded) {
         for (let move of childrens) {
           if (legalMoves.includes(move)) {
