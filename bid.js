@@ -106,6 +106,9 @@ function bid(payload) {
       if (j_in_suit > 0) {
         max1 = 16 + j_in_suit + nine_in_suit;
       }
+      if (j_in_suit === 0 && getTotalValue(cards) > 0) {
+        max1 = 16;
+      }
       j_in_suit = 0;
       nine_in_suit = 0;
       A_in_suit = 0;
@@ -130,6 +133,9 @@ function bid(payload) {
       }
       if (j_in_suit > 0) {
         max2 = 16 + j_in_suit + nine_in_suit;
+      }
+      if (j_in_suit === 0 && getTotalValue(cards) > 0) {
+        max2 = 16;
       }
       max_to_go_bid = Math.max(max1, max2);
     } else if (suitWithSameCount.length === 1) {
@@ -156,6 +162,9 @@ function bid(payload) {
       }
       if (j_in_suit > 0) {
         max_to_go_bid = 16 + j_in_suit + nine_in_suit;
+      }
+      if (j_in_suit === 0 && getTotalValue(cards) > 0) {
+        max_to_go_bid = 16;
       }
     }
   } else if (count_of_suit === 3) {
@@ -225,6 +234,9 @@ function bid(payload) {
       if (bidHistory.length === 3 && challengerBid === 0) {
         return { bid: MIN_BID };
       }
+      if (challengerId === friendId && challengerBid >= 17) {
+        return { bid: 0 };
+      }
 
       if (challengerBid === 0) {
         return { bid: MIN_BID };
@@ -236,6 +248,9 @@ function bid(payload) {
     } else if (myId === challengerId && defenderBid < max_to_go_bid) {
       if (bidHistory.length === 3 && defenderBid === 0) {
         return { bid: MIN_BID };
+      }
+      if (defenderId === friendId && defenderBid >= 17) {
+        return { bid: 0 };
       }
       if (defenderBid === 0) {
         return { bid: MIN_BID };
