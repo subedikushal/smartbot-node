@@ -104,7 +104,7 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max1 = 16 + j_in_suit + nine_in_suit;
+        max1 = 17;
       }
       if (j_in_suit === 0 && getTotalValue(cards) > 0) {
         max1 = 16;
@@ -132,7 +132,7 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max2 = 16 + j_in_suit + nine_in_suit;
+        max2 = 17;
       }
       if (j_in_suit === 0 && getTotalValue(cards) > 0) {
         max2 = 16;
@@ -161,7 +161,7 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max_to_go_bid = 16 + j_in_suit + nine_in_suit;
+        max_to_go_bid = 17;
       }
       if (j_in_suit === 0 && getTotalValue(cards) > 0) {
         max_to_go_bid = 16;
@@ -189,12 +189,12 @@ function bid(payload) {
       }
     }
     if (j_in_suit > 0) {
-      max_to_go_bid = 19;
+      max_to_go_bid = 18;
     } else {
       if (getTotalValue(cards) === 0) {
         max_to_go_bid = 16;
       } else {
-        max_to_go_bid = 18;
+        max_to_go_bid = 17;
       }
     }
   } else if (count_of_suit === 4) {
@@ -219,10 +219,10 @@ function bid(payload) {
       }
     }
     if (j_in_suit > 0) {
-      max_to_go_bid = 20;
+      max_to_go_bid = 19 + nine_in_suit;
     } else {
-      if (getTotalValue(cards) == 0) {
-        max_to_go_bid = 16;
+      if (getTotalValue(cards) === 0) {
+        max_to_go_bid = 17;
       } else {
         max_to_go_bid = 18;
       }

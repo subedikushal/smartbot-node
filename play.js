@@ -51,9 +51,15 @@ function play(payload) {
   let turns_to_play = 8 - payload['handsHistory'].length;
   let adjusted_time;
   if (turns_to_play >= 4) {
-    adjusted_time = (0.29 + (0.1 - 0.01 * turns_to_play)) * time_for_simulation;
+    adjusted_time = (0.27 + (0.08 - 0.01 * turns_to_play)) * time_for_simulation;
   } else {
-    adjusted_time = (0.32 + (0.04 - 0.01 * turns_to_play)) * time_for_simulation;
+    if (turns_to_play === 3) {
+      adjusted_time = 0.35 * time_for_simulation;
+    } else if (turns_to_play === 2) {
+      adjusted_time = 0.5 * time_for_simulation;
+    } else {
+      adjusted_time = 0.6 * time_for_simulation;
+    }
   }
   // console.log('Turns rem:', turns_to_play);
   // console.log(adjusted_time);

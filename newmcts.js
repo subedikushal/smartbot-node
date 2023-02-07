@@ -49,9 +49,12 @@ class MCTS {
       return lm[0];
     }
     // Four stage of ISMCTS
-    let i = 0;
+    // let i = 0;
     while (givenTime > 1) {
-      i++;
+      // i++;
+      // if (i > 2000) {
+      //   break;
+      // }
       var start = new Date().getTime();
       this.rootGameState.bipartite_distribute();
       // this.rootGameState.randomlyDistribute();
