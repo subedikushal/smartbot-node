@@ -661,8 +661,8 @@ class GameState {
         }
       }
 
-      // let legalMoves = this.getWinningMoves();
-      let legalMoves = this.getLegalMoves();
+      let legalMoves = this.getWinningMoves();
+      // let legalMoves = this.getLegalMoves();
       let toMove = _.sample(legalMoves);
       this.makeAMove(toMove);
     }
