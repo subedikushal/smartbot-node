@@ -24,19 +24,13 @@ class MCTS {
     MCTS.gameState = _.cloneDeep(gameState);
   }
   getUCB(node, c) {
-    let currPlayer;
+    let exploitation;
     if (node.parent.playerId === MCTS.gameState.MAX_1 || node.parent.playerId === MCTS.gameState.MAX_2) {
-      currPlayer = 1;
+      exploitation = node.maxWins / node.visits;
     } else if (node.parent.playerId === MCTS.gameState.MIN_1 || node.parent.playerId === MCTS.gameState.MIN_2) {
-      currPlayer = -1;
+      exploitation = node.minWins / node.visits;
     }
     // console.log(currPlayer, node.playerId, node.parent.playerId);
-    let exploitation;
-    if (currPlayer === -1) {
-      exploitation = node.minWins / node.visits;
-    } else if (currPlayer === 1) {
-      exploitation = node.maxWins / node.visits;
-    }
     // let exploration = c * Math.sqrt(Math.log(this.rootNode.visits) / node.visits);
     let exploration = c * Math.sqrt(Math.log(node.availability) / node.visits);
     let ucb = exploitation + exploration;
@@ -49,29 +43,23 @@ class MCTS {
       return lm[0];
     }
     // Four stage of ISMCTS
-    // let i = 0;
-    while (givenTime > 1) {
-      // i++;
-      // if (i > 2000) {
-      //   break;
-      // }
-      var start = new Date().getTime();
+    let i = 0;
+    while (givenTime > 0) {
+      i++;
+      var start = Date.now();
       this.rootGameState.bipartite_distribute();
-      // this.rootGameState.randomlyDistribute();
-      // this.rootGameState.randomlyDistributeWithoutLostSuit();
       this.changeGameState(this.rootGameState);
       let node = this.select(this.rootNode);
-      let s = this.rollout(node);
+      let s = MCTS.gameState.randomPlay();
       this.backpropagate(node, s);
-      var dur = new Date().getTime() - start;
-      givenTime -= dur;
+      givenTime -= Date.now() - start;
     }
     // console.log('Total iterations:', i);
 
     let data = [];
     for (let move of Object.keys(this.rootNode.childrens)) {
       let cN = this.rootNode.childrens[move];
-      data.push([move, cN.maxWins, cN.visits, cN.maxWins / cN.visits]);
+      data.push([move, cN.maxWins / cN.visits]);
     }
     data.sort((a, b) => b[1] - a[1]);
     // console.log(data);
@@ -98,6 +86,7 @@ class MCTS {
           }
         }
         node = this.getBestUCBNode(node, 0.5 * Math.sqrt(2));
+        // node = this.getBestUCBNode(node, Math.sqrt(2));
       } else {
         return this.expand(node);
       }
@@ -143,9 +132,9 @@ class MCTS {
     console.log('should not get here!');
   }
 
-  rollout(node) {
-    return MCTS.gameState.randomPlay();
-  }
+  // rollout(node) {
+  //   return MCTS.gameState.randomPlay();
+  // }
 
   backpropagate(node, score) {
     // console.log('backprop');

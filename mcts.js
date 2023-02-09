@@ -27,8 +27,7 @@ class GameState {
 
   constructor(payload) {
     this.payload = payload;
-  }
-  oneTimeCall() {
+    this.cardsLost = getLostSuitByOther(payload);
     this.MAX_1 = this.payload['playerId'];
     this.MAX_2 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 2) % 4];
     this.MIN_1 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 1) % 4];
@@ -98,27 +97,18 @@ class GameState {
       if (bidders['won'] >= bidders['bid']) {
         if (bidders['players'].includes(this.MAX_1) || bidders['players'].includes(this.MAX_2)) {
           toReturn = 1;
-          if (!this.payload.trumpRevealed) {
-            return -1;
-          }
         } else if (bidders['players'].includes(this.MIN_1) || bidders['players'].includes(this.MIN_2)) {
-          if (!this.payload.trumpRevealed) {
-            return 1;
-          }
           toReturn = -1;
         }
       } else if (nonBidders['won'] > GameState.MAX_BID_VALUE - bidValue) {
         if (nonBidders['players'].includes(this.MAX_1) || nonBidders['players'].includes(this.MAX_2)) {
-          if (!this.payload.trumpRevealed) {
-            return -1;
-          }
           toReturn = 1;
         } else if (nonBidders['players'].includes(this.MIN_1) || nonBidders['players'].includes(this.MIN_2)) {
-          if (!this.payload.trumpRevealed) {
-            return 1;
-          }
           toReturn = -1;
         }
+      }
+      if (!this.payload.trumpRevealed) {
+        return 0;
       }
       return toReturn;
     }
@@ -245,201 +235,7 @@ class GameState {
     }
     return legalMoves;
   }
-  bipartite_distribute() {
-    const suits = ['C', 'D', 'H', 'S'];
-    const ranks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
-    const allPossibilities = [];
-    for (let suit of suits) {
-      for (let rank of ranks) {
-        allPossibilities.push(rank + suit);
-      }
-    }
-    let player2 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 1) % 4];
-    let player3 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 2) % 4];
-    let player4 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 3) % 4];
-    var cardsLost = getLostSuitByOther(this.payload);
-    var doneCards = getTillPlayedCards(this.payload);
-    var played = this.payload.played;
-    var ownCards = this.payload[this.payload['playerId']];
-    doneCards = doneCards.concat(played, ownCards);
-    var remainingCards = [];
-    for (let card of allPossibilities) {
-      if (!doneCards.includes(card)) {
-        remainingCards.push(card);
-      }
-    }
-    remainingCards = _.shuffle(remainingCards);
 
-    var noOfCardsToDistribute = remainingCards.length;
-    var gets_count = {};
-    gets_count[player2] = Math.floor(noOfCardsToDistribute / 3) + (noOfCardsToDistribute % 3 >= 1);
-    gets_count[player3] = Math.floor(noOfCardsToDistribute / 3) + (noOfCardsToDistribute % 3 >= 2);
-    gets_count[player4] = Math.floor(noOfCardsToDistribute / 3);
-
-    var cardsLost = {};
-    cardsLost[player2] = new Set();
-    cardsLost[player3] = new Set();
-    cardsLost[player4] = new Set();
-    var players = this.payload['playerIds'];
-
-    for (let each_hand of this.payload.handsHistory) {
-      let starterPlayer = each_hand[0];
-      let handCards = each_hand[1];
-      let startSuit = handCards[0][1];
-
-      let secondCard = handCards[1];
-      if (secondCard[1] !== startSuit) {
-        let cardPlayer = players[(players.indexOf(starterPlayer) + 1) % 4];
-        if (cardPlayer !== this.payload['playerId']) cardsLost[cardPlayer].add(startSuit);
-      }
-
-      let thirdCard = handCards[2];
-      if (thirdCard[1] !== startSuit) {
-        let cardPlayer = players[(players.indexOf(starterPlayer) + 2) % 4];
-        if (cardPlayer !== this.payload['playerId']) cardsLost[cardPlayer].add(startSuit);
-      }
-
-      let forthCard = handCards[3];
-      if (forthCard[1] !== startSuit) {
-        let cardPlayer = players[(players.indexOf(starterPlayer) + 3) % 4];
-        if (cardPlayer !== this.payload['playerId']) cardsLost[cardPlayer].add(startSuit);
-      }
-    }
-    if (this.payload['played'].length >= 2) {
-      var firstCardPlayer;
-      if (this.payload.handsHistory.length === 0) {
-        if (this.payload['played'].length === 2) {
-          firstCardPlayer = players[(players.indexOf(this.payload.playerId) - 2 + 4) % 4];
-        } else if (this.payload['played'].length === 3) {
-          firstCardPlayer = players[(players.indexOf(this.payload.playerId) - 3 + 4) % 4];
-        } else {
-          console.log('DONY BE HERE');
-        }
-      } else {
-        let lastHand = this.payload.handsHistory[this.payload.handsHistory.length - 1];
-        firstCardPlayer = lastHand[2];
-      }
-      let firstCard = this.payload['played'][0];
-      let secondCard = this.payload['played'][1];
-      let secondCardPlayer = players[(players.indexOf(firstCardPlayer) + 1) % 4];
-      if (secondCard[1] !== firstCard[1]) cardsLost[secondCardPlayer].add(firstCard[1]);
-
-      if (this.payload['played'].length === 3) {
-        let thirdCard = this.payload['played'][2];
-        let thirdCardPlayer = players[(players.indexOf(firstCardPlayer) + 2) % 4];
-        if (thirdCard[1] !== firstCard[1]) cardsLost[thirdCardPlayer].add(firstCard[1]);
-      }
-    }
-    this.payload[player2] = [];
-    this.payload[player3] = [];
-    this.payload[player4] = [];
-
-    var not_cut = {};
-    not_cut[player2] = new Set();
-    not_cut[player3] = new Set();
-    not_cut[player4] = new Set();
-    for (let each of ['C', 'D', 'H', 'S']) {
-      if (!cardsLost[player2].has(each)) not_cut[player2].add(each);
-      if (!cardsLost[player3].has(each)) not_cut[player3].add(each);
-      if (!cardsLost[player4].has(each)) not_cut[player4].add(each);
-    }
-
-    var vertices = remainingCards.length + 5;
-    var adj = Array.from({ length: vertices }, () => Array(vertices).fill(0));
-
-    adj[0][1] = gets_count[player2];
-    adj[0][2] = gets_count[player3];
-    adj[0][3] = gets_count[player4];
-
-    if (false) {
-    } else {
-      var offset = 4;
-      for (let [idx, card] of remainingCards.entries()) {
-        if (not_cut[player2].has(card[1])) adj[1][idx + offset] += 1;
-        if (not_cut[player3].has(card[1])) adj[2][idx + offset] += 1;
-        if (not_cut[player4].has(card[1])) adj[3][idx + offset] += 1;
-      }
-
-      var card_node = 4;
-      for (var card_node = 4; card_node < vertices - 1; ++card_node) adj[card_node][vertices - 1] += 1;
-
-      var visited = Array(vertices).fill(false);
-      var path = [];
-      var pathfound = false;
-
-      function dfs(current) {
-        if (pathfound) return true;
-
-        path.push(current);
-        if (current === vertices - 1) pathfound = true;
-
-        visited[current] = true;
-        for (let i = 0; i < adj[current].length; i++) {
-          if (adj[current][i] > 0 && !visited[i]) {
-            dfs(i);
-          }
-        }
-        if (pathfound) {
-          return true;
-        }
-        path.pop();
-      }
-
-      let max_flow = 0;
-      while (true) {
-        visited = Array(vertices).fill(false);
-        path = [];
-        pathfound = false;
-        let path_exists = dfs(0);
-        if (!path_exists) {
-          break;
-        }
-        let path_bottleneck = Infinity;
-        for (let idx = 0; idx < path.length - 1; idx++) {
-          path_bottleneck = Math.min(path_bottleneck, adj[path[idx]][path[idx + 1]]);
-        }
-        max_flow += path_bottleneck;
-
-        for (let idx = 0; idx < path.length - 1; idx++) {
-          adj[path[idx]][path[idx + 1]] -= path_bottleneck;
-          adj[path[idx + 1]][path[idx]] += path_bottleneck;
-        }
-
-        for (let idx = 1; idx < path.length - 2; idx++) {
-          let x = path[idx],
-            y = path[idx + 1];
-          if (x < 4) {
-            let card_in_here = remainingCards[y - offset];
-            if (x === 1) {
-              this.payload[player2].push(card_in_here);
-            } else if (x === 2) {
-              this.payload[player3].push(card_in_here);
-            } else if (x === 3) {
-              this.payload[player4].push(card_in_here);
-            }
-          } else if (y < 4) {
-            let card_in_here = remainingCards[x - offset];
-            if (y === 1) {
-              this.payload[player2].splice(this.payload[player2].indexOf(card_in_here), 1);
-            } else if (y === 2) {
-              this.payload[player3].splice(this.payload[player3].indexOf(card_in_here), 1);
-            } else if (y === 3) {
-              this.payload[player4].splice(this.payload[player4].indexOf(card_in_here), 1);
-            }
-          }
-        }
-      }
-    }
-
-    if (this.payload.trumpSuit) {
-      this.payload.originalTrumpSuit = this.payload.trumpSuit;
-      this.payload.guessTrumpSuit = '-1';
-    } else {
-      let suits = ['C', 'S', 'H', 'D'];
-      this.payload.guessTrumpSuit = _.sample(suits);
-      this.payload.originalTrumpSuit = '-1';
-    }
-  }
   randomlyDistributeWithoutLostSuit() {
     let suits = ['C', 'D', 'H', 'S'];
     suits = _.shuffle(suits);
@@ -456,7 +252,7 @@ class GameState {
     let player4 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 3) % 4];
 
     // lost suit by others
-    var cardsLost = getLostSuitByOther(this.payload);
+    // var cardsLost = getLostSuitByOther(this.payload);
     var doneCards = getTillPlayedCards(this.payload);
     var played = this.payload.played;
     var ownCards = this.payload.cards;
@@ -524,7 +320,134 @@ class GameState {
       this.payload.originalTrumpSuit = '-1';
     }
   }
+  bipartite_distribute() {
+    const suits = ['C', 'D', 'H', 'S'];
+    const ranks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
+    const allPossibilities = [];
+    for (let suit of suits) {
+      for (let rank of ranks) {
+        allPossibilities.push(rank + suit);
+      }
+    }
+    let player2 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 1) % 4];
+    let player3 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 2) % 4];
+    let player4 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 3) % 4];
+    var doneCards = getTillPlayedCards(this.payload);
+    var played = this.payload.played;
+    var ownCards = this.payload[this.payload['playerId']];
+    doneCards = doneCards.concat(played, ownCards);
+    var remainingCards = [];
+    for (let card of allPossibilities) {
+      if (!doneCards.includes(card)) {
+        remainingCards.push(card);
+      }
+    }
+    remainingCards = _.shuffle(remainingCards);
 
+    var noOfCardsToDistribute = remainingCards.length;
+    var gets_count = {};
+    gets_count[player2] = Math.floor(noOfCardsToDistribute / 3) + (noOfCardsToDistribute % 3 >= 1);
+    gets_count[player3] = Math.floor(noOfCardsToDistribute / 3) + (noOfCardsToDistribute % 3 >= 2);
+    gets_count[player4] = Math.floor(noOfCardsToDistribute / 3);
+
+    var cardsLost = this.cardsLost;
+
+    this.payload[player2] = [];
+    this.payload[player3] = [];
+    this.payload[player4] = [];
+
+    var vertices = remainingCards.length + 5;
+    var adj = Array.from({ length: vertices }, () => Array(vertices).fill(0));
+
+    adj[0][1] = gets_count[player2];
+    adj[0][2] = gets_count[player3];
+    adj[0][3] = gets_count[player4];
+
+    if (this.payload.handsHistory.length === 0) {
+      this.randomlyDistribute();
+    } else {
+      var offset = 4;
+      for (let [idx, card] of remainingCards.entries()) {
+        if (!cardsLost[player2].has(card[1])) adj[1][idx + offset] += 1;
+        if (!cardsLost[player3].has(card[1])) adj[2][idx + offset] += 1;
+        if (!cardsLost[player4].has(card[1])) adj[3][idx + offset] += 1;
+      }
+
+      var card_node = 4;
+      for (var card_node = 4; card_node < vertices - 1; ++card_node) adj[card_node][vertices - 1] += 1;
+
+      function bfs(resGraph, s, t, parent) {
+        let n = t + 1;
+        let visited = new Array(n);
+        for (let i = 0; i < n; ++i) {
+          visited[i] = false;
+        }
+
+        let q = [];
+        //pushing source to the queue and marking it as visited
+        q.push(s);
+        visited[s] = true;
+        parent[s] = -1;
+
+        while (q.length != 0) {
+          let u = q.shift();
+          for (let v = 0; v < n; ++v) {
+            if (visited[v] === false && resGraph[u][v] > 0) {
+              //if a path is found to the sink ; return true
+              if (v === t) {
+                parent[v] = u;
+                return true;
+              }
+              q.push(v);
+              parent[v] = u;
+              visited[v] = true;
+            }
+          }
+        }
+        //no augmenting path was found to the sink ; return false
+        return false;
+      }
+
+      let max_flow = 0;
+      var parent = [];
+      var s = 0;
+      var t = vertices - 1;
+      while (bfs(adj, s, t, parent)) {
+        let bottle_neck = Number.MAX_VALUE;
+        for (let v = t; v != s; v = parent[v]) {
+          let u = parent[v];
+          bottle_neck = Math.min(bottle_neck, adj[u][v]);
+        }
+        for (let v = t; v != s; v = parent[v]) {
+          let u = parent[v];
+          adj[u][v] -= bottle_neck;
+          adj[v][u] += bottle_neck;
+        }
+        max_flow += bottle_neck;
+      }
+
+      for (let i = 4; i < vertices - 1; ++i) {
+        if (adj[i][1] === 1) {
+          this.payload[player2].push(remainingCards[i - 4]);
+        } else if (adj[i][2] === 1) {
+          this.payload[player3].push(remainingCards[i - 4]);
+        } else if (adj[i][3] === 1) {
+          this.payload[player4].push(remainingCards[i - 4]);
+        } else {
+          console.log('UNREACHABLE, CONTACT MANOJ');
+        }
+      }
+    }
+
+    if (this.payload.trumpSuit) {
+      this.payload.originalTrumpSuit = this.payload.trumpSuit;
+      this.payload.guessTrumpSuit = '-1';
+    } else {
+      let suits = ['C', 'S', 'H', 'D'];
+      this.payload.guessTrumpSuit = _.sample(suits);
+      this.payload.originalTrumpSuit = '-1';
+    }
+  }
   randomlyDistribute() {
     const suits = ['C', 'D', 'H', 'S'];
     const ranks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
@@ -540,7 +463,7 @@ class GameState {
     let player4 = this.payload['playerIds'][(this.payload['playerIds'].indexOf(this.payload['playerId']) + 3) % 4];
 
     // lost suit by others
-    var cardsLost = getLostSuitByOther(this.payload);
+    var cardsLost = this.cardsLost;
     var doneCards = getTillPlayedCards(this.payload);
     var played = this.payload.played;
     var ownCards = this.payload.cards;
@@ -723,132 +646,13 @@ class GameState {
         }
       }
 
-      var legalMoves = this.getWinningMoves();
+      let legalMoves = this.getWinningMoves();
+      // let legalMoves = this.getLegalMoves();
       let toMove = _.sample(legalMoves);
       this.makeAMove(toMove);
     }
     return this.terminalValue();
     // return this.dynamicTerminalValue();
-  }
-  ucbRandomPlay(given_time) {
-    var start = new Date().getTime();
-    var cardPlayedCount = {};
-    var scoreDict = {};
-    var legalMoves = this.getLegalMoves();
-    if (legalMoves.includes('OT')) {
-      removeElement(legalMoves, 'OT');
-    }
-    var ucbDict = {};
-    for (let move of legalMoves) {
-      scoreDict[move] = 0;
-      cardPlayedCount[move] = 0;
-      ucbDict[move] = Infinity;
-    }
-    var total_parent_visit = 0;
-    var end = new Date().getTime();
-    given_time -= end - start;
-    while (given_time > 0) {
-      var start = new Date().getTime();
-      this.randomlyDistribute();
-      var maxUcbMove = Object.keys(ucbDict).reduce((a, b) => (ucbDict[a] > ucbDict[b] ? a : b));
-      var tempState = _.cloneDeep(this);
-      tempState.makeAMove(maxUcbMove);
-      var result = tempState.randomPlay();
-      scoreDict[maxUcbMove] += result;
-      cardPlayedCount[maxUcbMove] += 1;
-      total_parent_visit += 1;
-      for (var card of legalMoves) {
-        if (cardPlayedCount[card] > 0) {
-          let c = 0.7;
-          let exploitation = scoreDict[card] / cardPlayedCount[card];
-          let exploration = c * Math.sqrt(Math.log(total_parent_visit) / cardPlayedCount[card]);
-          ucbDict[card] = exploitation + exploration;
-        }
-      }
-      var end = new Date().getTime();
-      given_time -= end - start;
-    }
-    for (var card of legalMoves) {
-      ucbDict[card] = scoreDict[card] / cardPlayedCount[card];
-    }
-
-    return ucbDict;
-  }
-  scoreRandomPlay(given_time) {
-    var scores = {};
-    var legalMoves = this.getLegalMoves();
-    for (let move of legalMoves) {
-      scores[move] = 0;
-    }
-    let i = 0;
-    while (given_time > 0) {
-      i += 1;
-      var start = new Date().getTime();
-      this.randomlyDistributeWithoutLostSuit();
-      // this.bipartite_distribute();
-      // this.randomlyDistribute();
-      for (let card of legalMoves) {
-        var tempState = _.cloneDeep(this);
-        tempState.makeAMove(card);
-        var result = tempState.randomPlay(i);
-        scores[card] += result;
-      }
-      let end = new Date().getTime();
-      given_time -= end - start;
-    }
-    // console.log('For:', legalMoves.length);
-    // console.log('Total Iterations:', i);
-    return scores;
-  }
-  show() {
-    let legalMoves = this.getLegalMoves();
-    if (legalMoves.length === 1) {
-      return legalMoves[0];
-    }
-    let time_for_simulation = this.payload['timeRemaining'];
-    let turns_to_play = 8 - this.payload['handsHistory'].length;
-    var adjusted_time;
-    let time = {
-      8: 6 / 29,
-      7: 6 / 29,
-      6: 5 / 29,
-      5: 4 / 29,
-      4: 3 / 29,
-      3: 5 / 58,
-      2: 3 / 58,
-      1: 0.8,
-    };
-    adjusted_time = (0.28 - 0.01 * turns_to_play) * time_for_simulation;
-    console.log(adjusted_time);
-
-    // if (this.payload['handsHistory'].length === 0) {
-    //   adjusted_time = time_for_simulation / (turns_to_play - 1) + 120;
-    // } else if (this.payload['handsHistory'].length == 1) {
-    //   adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
-    // } else if (this.payload['handsHistory'].length === 2) {
-    //   adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
-    // } else if (this.payload['handsHistory'].length === 3) {
-    //   adjusted_time = time_for_simulation / (turns_to_play - 1) + 90;
-    // } else if (this.payload['handsHistory'].length === 4) {
-    //   adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
-    // } else if (this.payload['handsHistory'].length === 5) {
-    //   adjusted_time = time_for_simulation / (turns_to_play - 1) + 40;
-    // } else if (this.payload['handsHistory'].length === 6) {
-    //   adjusted_time = (time_for_simulation + 60) / turns_to_play;
-    // } else if (this.payload['handsHistory'].length === 7) {
-    //   adjusted_time = time_for_simulation - 10;
-    // }
-    var playData = this.scoreRandomPlay(adjusted_time);
-    let besters = Object.entries(playData);
-    let copyBesters = _.cloneDeep(besters);
-    let sortedBesters = copyBesters.sort((a, b) => b[1] - a[1]);
-    let toMove;
-    let trumpSuit = this.payload.trumpSuit;
-    let highestScore = sortedBesters[0][1];
-    var collection = [];
-    toMove = sortedBesters[0][0];
-    // console.log(sortedBesters);
-    return toMove;
   }
 }
 module.exports = GameState;

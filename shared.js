@@ -387,6 +387,7 @@ let nextPlayerMap = (players, playerId) => {
 let getLostSuitByOther = payload => {
   let playerId = payload.playerId;
   let players = payload.playerIds;
+  let played = payload.played;
   let handsHistory = payload.handsHistory;
   let player2 = players[(players.indexOf(playerId) + 1) % 4];
   let player3 = players[(players.indexOf(playerId) + 2) % 4];
@@ -400,6 +401,7 @@ let getLostSuitByOther = payload => {
   for (let eachHand of handsHistory) {
     let starterPlayer = eachHand[0];
     let starterCardSuit = eachHand[1][0][1];
+    // console.log(starterPlayer, starterCardSuit);
 
     let secondCard = eachHand[1][1];
     if (secondCard[1] !== starterCardSuit) {
@@ -408,18 +410,41 @@ let getLostSuitByOther = payload => {
         cardsLost[cardPlayer].add(starterCardSuit);
       }
     }
-    thirdCard = eachHand[1][1];
+    thirdCard = eachHand[1][2];
     if (thirdCard[1] !== starterCardSuit) {
       let cardPlayer = players[(players.indexOf(starterPlayer) + 2) % 4];
       if (cardPlayer !== playerId) {
         cardsLost[cardPlayer].add(starterCardSuit);
       }
     }
-    forthCard = eachHand[1][1];
+    forthCard = eachHand[1][3];
     if (forthCard[1] !== starterCardSuit) {
       let cardPlayer = players[(players.indexOf(starterPlayer) + 3) % 4];
       if (cardPlayer !== playerId) {
         cardsLost[cardPlayer].add(starterCardSuit);
+      }
+    }
+    if (played.length > 1) {
+      let firstCard = played[0];
+      if (played.length === 2) {
+        let secondCard = played[1];
+        if (secondCard[1] !== firstCard[1]) {
+          let friendId = players[(players.indexOf(playerId) + 2) % 4];
+          let katnePlayer = players[(players.indexOf(friendId) + 1) % 4];
+          cardsLost[katnePlayer].add(firstCard[1]);
+        }
+      } else if (played.length === 3) {
+        let secondCard = played[1];
+        if (secondCard[1] !== firstCard[1]) {
+          let katnePlayer = players[(players.indexOf(playerId) + 2) % 4];
+          cardsLost[katnePlayer].add(firstCard[1]);
+        }
+        let thirdCard = played[2];
+        if (thirdCard[1] !== firstCard[1]) {
+          let friendId = players[(players.indexOf(playerId) + 2) % 4];
+          let katnePlayer = players[(players.indexOf(friendId) + 1) % 4];
+          cardsLost[katnePlayer].add(firstCard[1]);
+        }
       }
     }
 
@@ -433,7 +458,7 @@ let getLostSuitByOther = payload => {
       C: 0,
     };
     for (let card of tillPlayedCards) {
-      count_of_dropped_suit[card[-1]] += 1;
+      count_of_dropped_suit[card[1]] += 1;
     }
 
     for (let suit of suits) {
@@ -444,6 +469,7 @@ let getLostSuitByOther = payload => {
       }
     }
   }
+
   return cardsLost;
 };
 module.exports = {

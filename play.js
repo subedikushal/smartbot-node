@@ -33,7 +33,6 @@ MCTS = require('./newmcts.js');
   }
  */
 function play(payload) {
-  // console.log(payload.playerId, payload.timeRemaining);
   // console.log(payload.cards.length);
   // console.log(payload.played);
   // console.log(payload.playerId, isFriendWinning(payload));
@@ -49,6 +48,9 @@ function play(payload) {
   // }
   let time_for_simulation = payload['timeRemaining'];
   let turns_to_play = 8 - payload['handsHistory'].length;
+
+  // console.log(turns_to_play);
+  // console.log(time_for_simulation);
   let adjusted_time;
   if (turns_to_play >= 4) {
     adjusted_time = (0.27 + (0.08 - 0.01 * turns_to_play)) * time_for_simulation;
@@ -61,10 +63,9 @@ function play(payload) {
       adjusted_time = 0.6 * time_for_simulation;
     }
   }
-  // console.log('Turns rem:', turns_to_play);
   // console.log(adjusted_time);
   var currentState = new GameState(payload);
-  currentState.oneTimeCall();
+  // currentState.oneTimeCall();
   let mcts = new MCTS(currentState);
   let move = mcts.search(adjusted_time);
   // console.log('***********');
