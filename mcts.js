@@ -444,6 +444,21 @@ class GameState {
       this.payload.guessTrumpSuit = '-1';
     } else {
       let suits = ['C', 'S', 'H', 'D'];
+      // let myCards = this.payload[this.payload.playerId];
+      // let myGulamSuits = [];
+      // for (let card of myCards) {
+      //   if (card[0] === 'J') {
+      //     myGulamSuits.push(card[1]);
+      //   }
+      // }
+      // if (myGulamSuits.length > 0) {
+      //   for (let suit in suits) {
+      //     if (!myGulamSuits.includes(suit)) {
+      //       suits.push(suit);
+      //     }
+      //   }
+      // }
+
       this.payload.guessTrumpSuit = _.sample(suits);
       this.payload.originalTrumpSuit = '-1';
     }
@@ -646,8 +661,8 @@ class GameState {
         }
       }
 
-      let legalMoves = this.getWinningMoves();
-      // let legalMoves = this.getLegalMoves();
+      // let legalMoves = this.getWinningMoves();
+      let legalMoves = this.getLegalMoves();
       let toMove = _.sample(legalMoves);
       this.makeAMove(toMove);
     }
