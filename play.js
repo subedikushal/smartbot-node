@@ -53,7 +53,7 @@ function play(payload) {
   // console.log(time_for_simulation);
   let adjusted_time;
   if (turns_to_play >= 4) {
-    adjusted_time = (0.27 + (0.08 - 0.01 * turns_to_play)) * time_for_simulation;
+    adjusted_time = (0.3 + (0.08 - 0.01 * turns_to_play)) * time_for_simulation;
   } else {
     if (turns_to_play === 3) {
       adjusted_time = 0.35 * time_for_simulation;

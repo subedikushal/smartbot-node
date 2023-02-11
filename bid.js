@@ -17,7 +17,7 @@
 
 const { max } = require('lodash');
 const _ = require('lodash');
-const { getTotalValue } = require('./shared');
+const { getTotalValue, getSuitCards } = require('./shared');
 
 const MIN_BID = 16;
 
@@ -72,12 +72,7 @@ function bid(payload) {
   if (count_of_suit === 1) {
     let totalValue = getTotalValue(cards);
     if (no_j > 0) {
-      max_to_go_bid = 15.73 + totalValue / 11;
-      if (max_to_go_bid > 16.5) {
-        max_to_go_bid = 17;
-      } else if (max_to_go_bid >= 16 && max_to_go_bid <= 16.5) {
-        max_to_go_bid = 16;
-      }
+      max_to_go_bid = 16;
     }
   } else if (count_of_suit === 2) {
     if (suitWithSameCount.length === 2) {
@@ -104,9 +99,16 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max1 = 17;
+        if (getTotalValue(getSuitCards(cards, suit1)) - 3 > 0) {
+          max1 = 17;
+        } else {
+          max1 = 16;
+        }
       }
-      if (j_in_suit === 0 && getTotalValue(cards) > 0) {
+      if (j_in_suit === 0 && getTotalValue(cards) >= 6) {
+        max1 = 16;
+      }
+      if (j_in_suit === 0 && no_j > 0) {
         max1 = 16;
       }
       j_in_suit = 0;
@@ -132,9 +134,16 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max2 = 17;
+        if (getTotalValue(getSuitCards(cards, suit2)) - 3 > 0) {
+          max2 = 17;
+        } else {
+          max2 = 16;
+        }
       }
-      if (j_in_suit === 0 && getTotalValue(cards) > 0) {
+      if (j_in_suit === 0 && getTotalValue(cards) >= 6) {
+        max2 = 16;
+      }
+      if (j_in_suit === 0 && no_j > 0) {
         max2 = 16;
       }
       max_to_go_bid = Math.max(max1, max2);
@@ -161,9 +170,16 @@ function bid(payload) {
         }
       }
       if (j_in_suit > 0) {
-        max_to_go_bid = 17;
+        if (getTotalValue(getSuitCards(cards, suit1)) - 3 > 0) {
+          max_to_go_bid = 17;
+        } else {
+          max_to_go_bid = 16;
+        }
       }
-      if (j_in_suit === 0 && getTotalValue(cards) > 0) {
+      if (j_in_suit === 0 && getTotalValue(cards) >= 6) {
+        max_to_go_bid = 16;
+      }
+      if (j_in_suit === 0 && no_j > 0) {
         max_to_go_bid = 16;
       }
     }
@@ -191,11 +207,7 @@ function bid(payload) {
     if (j_in_suit > 0) {
       max_to_go_bid = 18;
     } else {
-      if (getTotalValue(cards) === 0) {
-        max_to_go_bid = 16;
-      } else {
-        max_to_go_bid = 17;
-      }
+      max_to_go_bid = 17;
     }
   } else if (count_of_suit === 4) {
     var j_in_suit = 0;
@@ -219,13 +231,9 @@ function bid(payload) {
       }
     }
     if (j_in_suit > 0) {
-      max_to_go_bid = 19 + nine_in_suit;
+      max_to_go_bid = Math.min(20, 18 + nine_in_suit + A_in_suit + T_in_suit);
     } else {
-      if (getTotalValue(cards) === 0) {
-        max_to_go_bid = 17;
-      } else {
-        max_to_go_bid = 18;
-      }
+      max_to_go_bid = 17;
     }
   }
 
@@ -233,9 +241,6 @@ function bid(payload) {
     if (myId === defenderId && challengerBid <= max_to_go_bid) {
       if (bidHistory.length === 3 && challengerBid === 0) {
         return { bid: MIN_BID };
-      }
-      if (challengerId === friendId && challengerBid >= 17) {
-        return { bid: 0 };
       }
 
       if (challengerBid === 0) {
@@ -249,7 +254,7 @@ function bid(payload) {
       if (bidHistory.length === 3 && defenderBid === 0) {
         return { bid: MIN_BID };
       }
-      if (defenderId === friendId && defenderBid >= 17) {
+      if (defenderId === friendId) {
         return { bid: 0 };
       }
       if (defenderBid === 0) {

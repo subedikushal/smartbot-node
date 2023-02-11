@@ -43,11 +43,12 @@ class MCTS {
       return lm[0];
     }
     // Four stage of ISMCTS
-    let i = 0;
+    // let i = 0;
     while (givenTime > 0) {
-      i++;
+      // i++;
       var start = Date.now();
       this.rootGameState.bipartite_distribute();
+      // this.rootGameState.randomlyDistribute();
       this.changeGameState(this.rootGameState);
       let node = this.select(this.rootNode);
       let s = MCTS.gameState.randomPlay();

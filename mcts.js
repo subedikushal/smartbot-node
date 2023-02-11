@@ -363,79 +363,75 @@ class GameState {
     adj[0][2] = gets_count[player3];
     adj[0][3] = gets_count[player4];
 
-    if (this.payload.handsHistory.length === 0) {
-      this.randomlyDistribute();
-    } else {
-      var offset = 4;
-      for (let [idx, card] of remainingCards.entries()) {
-        if (!cardsLost[player2].has(card[1])) adj[1][idx + offset] += 1;
-        if (!cardsLost[player3].has(card[1])) adj[2][idx + offset] += 1;
-        if (!cardsLost[player4].has(card[1])) adj[3][idx + offset] += 1;
+    var offset = 4;
+    for (let [idx, card] of remainingCards.entries()) {
+      if (!cardsLost[player2].has(card[1])) adj[1][idx + offset] += 1;
+      if (!cardsLost[player3].has(card[1])) adj[2][idx + offset] += 1;
+      if (!cardsLost[player4].has(card[1])) adj[3][idx + offset] += 1;
+    }
+
+    var card_node = 4;
+    for (var card_node = 4; card_node < vertices - 1; ++card_node) adj[card_node][vertices - 1] += 1;
+
+    function bfs(resGraph, s, t, parent) {
+      let n = t + 1;
+      let visited = new Array(n);
+      for (let i = 0; i < n; ++i) {
+        visited[i] = false;
       }
 
-      var card_node = 4;
-      for (var card_node = 4; card_node < vertices - 1; ++card_node) adj[card_node][vertices - 1] += 1;
+      let q = [];
+      //pushing source to the queue and marking it as visited
+      q.push(s);
+      visited[s] = true;
+      parent[s] = -1;
 
-      function bfs(resGraph, s, t, parent) {
-        let n = t + 1;
-        let visited = new Array(n);
-        for (let i = 0; i < n; ++i) {
-          visited[i] = false;
-        }
-
-        let q = [];
-        //pushing source to the queue and marking it as visited
-        q.push(s);
-        visited[s] = true;
-        parent[s] = -1;
-
-        while (q.length != 0) {
-          let u = q.shift();
-          for (let v = 0; v < n; ++v) {
-            if (visited[v] === false && resGraph[u][v] > 0) {
-              //if a path is found to the sink ; return true
-              if (v === t) {
-                parent[v] = u;
-                return true;
-              }
-              q.push(v);
+      while (q.length != 0) {
+        let u = q.shift();
+        for (let v = 0; v < n; ++v) {
+          if (visited[v] === false && resGraph[u][v] > 0) {
+            //if a path is found to the sink ; return true
+            if (v === t) {
               parent[v] = u;
-              visited[v] = true;
+              return true;
             }
+            q.push(v);
+            parent[v] = u;
+            visited[v] = true;
           }
         }
-        //no augmenting path was found to the sink ; return false
-        return false;
       }
+      //no augmenting path was found to the sink ; return false
+      return false;
+    }
 
-      let max_flow = 0;
-      var parent = [];
-      var s = 0;
-      var t = vertices - 1;
-      while (bfs(adj, s, t, parent)) {
-        let bottle_neck = Number.MAX_VALUE;
-        for (let v = t; v != s; v = parent[v]) {
-          let u = parent[v];
-          bottle_neck = Math.min(bottle_neck, adj[u][v]);
-        }
-        for (let v = t; v != s; v = parent[v]) {
-          let u = parent[v];
-          adj[u][v] -= bottle_neck;
-          adj[v][u] += bottle_neck;
-        }
-        max_flow += bottle_neck;
+    let max_flow = 0;
+    var parent = [];
+    var s = 0;
+    var t = vertices - 1;
+    while (bfs(adj, s, t, parent)) {
+      let bottle_neck = Number.MAX_VALUE;
+      for (let v = t; v != s; v = parent[v]) {
+        let u = parent[v];
+        bottle_neck = Math.min(bottle_neck, adj[u][v]);
       }
+      for (let v = t; v != s; v = parent[v]) {
+        let u = parent[v];
+        adj[u][v] -= bottle_neck;
+        adj[v][u] += bottle_neck;
+      }
+      max_flow += bottle_neck;
+    }
 
-      for (let i = 4; i < vertices - 1; ++i) {
-        if (adj[i][1] === 1) {
-          this.payload[player2].push(remainingCards[i - 4]);
-        } else if (adj[i][2] === 1) {
-          this.payload[player3].push(remainingCards[i - 4]);
-        } else if (adj[i][3] === 1) {
-          this.payload[player4].push(remainingCards[i - 4]);
-        } else {
-          console.log('UNREACHABLE, CONTACT MANOJ');
-        }
+    for (let i = 4; i < vertices - 1; ++i) {
+      if (adj[i][1] === 1) {
+        this.payload[player2].push(remainingCards[i - 4]);
+      } else if (adj[i][2] === 1) {
+        this.payload[player3].push(remainingCards[i - 4]);
+      } else if (adj[i][3] === 1) {
+        this.payload[player4].push(remainingCards[i - 4]);
+      } else {
+        console.log('UNREACHABLE, CONTACT MANOJ');
       }
     }
 
