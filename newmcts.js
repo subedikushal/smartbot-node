@@ -25,16 +25,28 @@ class MCTS {
   }
   getUCB(node, c) {
     let exploitation;
+
+    let variance;
+    let mean;
+    // console.log(node.maxWins, node.minWins, node.visits);
     if (node.parent.playerId === MCTS.gameState.MAX_1 || node.parent.playerId === MCTS.gameState.MAX_2) {
       exploitation = node.maxWins / node.visits;
+
+      mean = node.maxWins / node.visits;
+      variance = (node.maxWins * Math.pow(1 - mean, 2) + node.minWins * Math.pow(0 - mean, 2)) / node.visits;
     } else if (node.parent.playerId === MCTS.gameState.MIN_1 || node.parent.playerId === MCTS.gameState.MIN_2) {
       exploitation = node.minWins / node.visits;
+      mean = node.minWins / node.visits;
+      variance = (node.minWins * Math.pow(1 - mean, 2) + node.maxWins * Math.pow(0 - mean, 2)) / node.visits;
     }
     // console.log(currPlayer, node.playerId, node.parent.playerId);
     // let exploration = c * Math.sqrt(Math.log(this.rootNode.visits) / node.visits);
-    let exploration = c * Math.sqrt(Math.log(node.availability) / node.visits);
-    let ucb = exploitation + exploration;
-    return ucb;
+    //(n * mean^2 + m * (mean - 1)^2) / (n + m)
+    let v_bound = mean - mean * mean + Math.sqrt(2 * Math.sqrt(Math.log(node.availability) / node.visits));
+    // console.log(variance, v_bound);
+    let c1 = Math.sqrt(Math.log(node.availability) / node.visits) * (variance + v_bound);
+    // console.log('c1:', c1);
+    return exploitation + c1;
   }
   search(givenTime) {
     this.changeGameState(this.rootGameState);
@@ -43,9 +55,7 @@ class MCTS {
       return lm[0];
     }
     // Four stage of ISMCTS
-    // let i = 0;
     while (givenTime > 0) {
-      // i++;
       var start = Date.now();
       this.rootGameState.bipartite_distribute();
       // this.rootGameState.randomlyDistribute();
@@ -79,7 +89,6 @@ class MCTS {
           break;
         }
       }
-
       if (fullyExpanded) {
         for (let move of childrens) {
           if (legalMoves.includes(move)) {
@@ -87,7 +96,7 @@ class MCTS {
           }
         }
         // node = this.getBestUCBNode(node, 0.5 * Math.sqrt(2));
-        node = this.getBestUCBNode(node, Math.sqrt(2));
+        node = this.getBestUCBNode(node, 0.5 * Math.sqrt(2));
       } else {
         return this.expand(node);
       }
@@ -104,6 +113,7 @@ class MCTS {
       if (legalMoves.includes(move)) {
         let child = node.childrens[move];
         let ucb = this.getUCB(child, c);
+        // console.log(ucb);
         if (ucb > bestUCB) {
           bestUCB = ucb;
           bestMoves = [move];
@@ -112,6 +122,8 @@ class MCTS {
         }
       }
     }
+    // console.log(bestUCB);
+    // console.log(bestMoves);
     // console.log('bestMoves:', bestMoves);
     let m = _.sample(bestMoves);
     MCTS.gameState.makeAMove(m);
