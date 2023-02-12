@@ -15,65 +15,78 @@ class TreeNode {
 class MCTS {
   static maxIterations = 600;
   static gameState = null;
+
   constructor(gameState) {
     this.rootNode = new TreeNode(gameState.payload.playerId);
     this.rootGameState = gameState;
     this.rootPlayer = gameState.payload.playerId;
   }
+
   changeGameState(gameState) {
     MCTS.gameState = _.cloneDeep(gameState);
   }
-  getUCB(node, c) {
-    let exploitation;
 
+  getUCB(node, c) 
+  {
+    let exploitation;
     let variance;
     let mean;
     // console.log(node.maxWins, node.minWins, node.visits);
-    if (node.parent.playerId === MCTS.gameState.MAX_1 || node.parent.playerId === MCTS.gameState.MAX_2) {
+    if (node.parent.playerId === MCTS.gameState.MAX_1 || node.parent.playerId === MCTS.gameState.MAX_2) 
+    {
       exploitation = node.maxWins / node.visits;
-
       mean = node.maxWins / node.visits;
-      variance = (node.maxWins * Math.pow(1 - mean, 2) + node.minWins * Math.pow(0 - mean, 2)) / node.visits;
-    } else if (node.parent.playerId === MCTS.gameState.MIN_1 || node.parent.playerId === MCTS.gameState.MIN_2) {
+    } 
+    else if (node.parent.playerId === MCTS.gameState.MIN_1 || node.parent.playerId === MCTS.gameState.MIN_2) 
+    {
       exploitation = node.minWins / node.visits;
       mean = node.minWins / node.visits;
-      variance = (node.minWins * Math.pow(1 - mean, 2) + node.maxWins * Math.pow(0 - mean, 2)) / node.visits;
     }
-    // console.log(currPlayer, node.playerId, node.parent.playerId);
-    // let exploration = c * Math.sqrt(Math.log(this.rootNode.visits) / node.visits);
-    //(n * mean^2 + m * (mean - 1)^2) / (n + m)
-    let v_bound = mean - mean * mean + Math.sqrt(2 * Math.sqrt(Math.log(node.availability) / node.visits));
-    // console.log(variance, v_bound);
-    let c1 = Math.sqrt(Math.log(node.availability) / node.visits) * (variance + v_bound);
-    // console.log('c1:', c1);
-    return exploitation + c1;
+
+    let v_bound = mean - mean * mean + Math.sqrt(2 * Math.log(node.availability) / node.visits);
+    // v_bound = Math.min(v_bound, 0.25)
+    let exploration = Math.sqrt((Math.log(node.availability) / node.visits) * v_bound);
+    return exploitation + exploration;
+
   }
+
   search(givenTime) {
+    let suits = ['C', 'D', 'H', 'S']
+
     this.changeGameState(this.rootGameState);
     let lm = MCTS.gameState.getLegalMoves();
     if (lm.length === 1) {
       return lm[0];
     }
+
     // Four stage of ISMCTS
+    let ITERATIONS = 0;
     while (givenTime > 0) {
       var start = Date.now();
       this.rootGameState.bipartite_distribute();
-      // this.rootGameState.randomlyDistribute();
-      this.changeGameState(this.rootGameState);
-      let node = this.select(this.rootNode);
-      let s = MCTS.gameState.randomPlay();
-      this.backpropagate(node, s);
+      
+      //To make only one play comment out for and pass null
+      //To make four play, insert for and pass suit;
+      
+      // for (let suit of suits)
+      // {
+        ITERATIONS += 1;
+        this.changeGameState(this.rootGameState);
+        let node = this.select(this.rootNode);
+        let s = MCTS.gameState.randomPlay(null);
+        this.backpropagate(node, s);
+      // }
       givenTime -= Date.now() - start;
     }
-    // console.log('Total iterations:', i);
 
+    // console.log("ITERATIONS", ITERATIONS)
     let data = [];
     for (let move of Object.keys(this.rootNode.childrens)) {
       let cN = this.rootNode.childrens[move];
-      data.push([move, cN.maxWins / cN.visits]);
+      data.push([move, cN.visits]);
     }
+
     data.sort((a, b) => b[1] - a[1]);
-    // console.log(data);
     return data[0][0];
   }
 
@@ -95,7 +108,6 @@ class MCTS {
             node.childrens[move].availability += 1;
           }
         }
-        // node = this.getBestUCBNode(node, 0.5 * Math.sqrt(2));
         node = this.getBestUCBNode(node, 0.5 * Math.sqrt(2));
       } else {
         return this.expand(node);
@@ -145,10 +157,6 @@ class MCTS {
     console.log('should not get here!');
   }
 
-  // rollout(node) {
-  //   return MCTS.gameState.randomPlay();
-  // }
-
   backpropagate(node, score) {
     // console.log('backprop');
     while (node != null) {
@@ -164,5 +172,6 @@ class MCTS {
     // console.log('***************');
   }
 }
+
 
 module.exports = MCTS;

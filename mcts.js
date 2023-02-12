@@ -13,18 +13,24 @@ const {
 
 class GameState {
   static ITERATIONS = 8;
-
-  // static MAX_1 = '.';
-  // static MAX_2 = '.';
-  // static MIN_1 = '.';
-  // static MIN_2 = '.';
   static TRUMPER = '';
 
   static MAX_VALUE = 1;
   static MIN_VALUE = -1;
 
   static MAX_BID_VALUE = 28;
-
+  static CARDS_DICT = {
+    J: 3,
+    9: 2,
+    1: 1.1,
+    T: 1,
+    K: 0.4,
+    Q: 0.3,
+    8: 0.2,
+    7: 0.1,
+    O: 10,
+  };
+  
   constructor(payload) {
     this.payload = payload;
     this.cardsLost = getLostSuitByOther(payload);
@@ -77,6 +83,7 @@ class GameState {
     }
     console.log('FUCK YOU!!!!!!!!!!!!!!!!!!!');
   }
+
   terminalValue() {
     if (this.payload.handsHistory.length === 8) {
       var bidders = {};
@@ -114,12 +121,7 @@ class GameState {
     }
     return false;
   }
-  // isTerminal() {
-  //   if (this.terminalValue() === 1 || this.terminalValue() === -1 || this.terminalValue() === 0) {
-  //     return true;
-  //   }
-  //   return false;
-  // }
+
   isTerminal() {
     if (this.terminalValue() === 1 || this.terminalValue() === -1 || this.terminalValue() === 0) {
       return true;
@@ -192,7 +194,8 @@ class GameState {
     }
     return myCards;
   }
-  getWinningMoves() {
+
+  getWinningMoves1() {
     let legalMoves = this.getLegalMoves();
     let currentlyPlayedCards = this.payload.played;
     if (currentlyPlayedCards.length > 0) {
@@ -234,6 +237,86 @@ class GameState {
       return legalMoves;
     }
     return legalMoves;
+  }
+
+  getWinningMoves2()
+  {
+    var legalMoves = this.getLegalMoves()
+	  if (this.payload['played'].length === 0)
+	  {
+		  return legalMoves;
+	  }
+	  else if (this.payload['played'].length === 1)
+	  {
+		  return legalMoves;
+	  }
+	  else if (this.payload['played'].length === 2)
+	  {
+		  return legalMoves
+	  }
+	  else if (this.payload['played'].length === 3)
+	  {
+		  // if friend is winning throw one of the value cards
+		  if (isFriendWinning(this.payload))
+		  {
+			  var valueCards = []
+			  for (let card of this.payload[this.payload['playerId']])
+			  {
+				  if (GameState.CARDS_DICT[card[0]] >= 1 && GameState.CARDS_DICT[card[0]] <= 3)
+				  {
+					  valueCards.push(card)
+				  }
+			  }
+			  if (valueCards.length !== 0)
+			  {
+				  return valueCards
+			  }
+			  else
+			  {
+				  return legalMoves;
+			  }
+		  }
+		  // else friend not winning:
+		  else
+		  {
+			  if (legalMoves[legalMoves.length-1] === 'OT')
+			  {
+				  var totalValueInGround = getTotalValue(this.payload['played'])
+				  if (totalValueInGround > 0)
+				  {
+					  return ['OT']
+				  }
+				  else
+				  {
+					  legalMoves.pop()
+					  return legalMoves;
+				  }
+			  }
+			  else
+			  {
+				  var nonValueCards = []
+				  for (let card of this.payload[this.payload['playerId']])
+				  {
+					  if (GameState.CARDS_DICT[card[0]] < 1)
+					  {
+						  nonValueCards.push(card)
+					  }
+				  }
+				  if (nonValueCards.length !== 0)
+				  {
+					  return nonValueCards
+				  }
+				  else
+				  {
+					  return legalMoves
+				  }
+			  }
+		  }
+	  }
+	  else
+	  {
+		  console.log("UNREACHEABLE")
+	  }
   }
 
   randomlyDistributeWithoutLostSuit() {
@@ -320,6 +403,7 @@ class GameState {
       this.payload.originalTrumpSuit = '-1';
     }
   }
+
   bipartite_distribute() {
     const suits = ['C', 'D', 'H', 'S'];
     const ranks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
@@ -373,7 +457,7 @@ class GameState {
     var card_node = 4;
     for (var card_node = 4; card_node < vertices - 1; ++card_node) adj[card_node][vertices - 1] += 1;
 
-    function bfs(resGraph, s, t, parent) {
+    function bfs(Graph, s, t, parent) {
       let n = t + 1;
       let visited = new Array(n);
       for (let i = 0; i < n; ++i) {
@@ -381,7 +465,6 @@ class GameState {
       }
 
       let q = [];
-      //pushing source to the queue and marking it as visited
       q.push(s);
       visited[s] = true;
       parent[s] = -1;
@@ -389,8 +472,7 @@ class GameState {
       while (q.length != 0) {
         let u = q.shift();
         for (let v = 0; v < n; ++v) {
-          if (visited[v] === false && resGraph[u][v] > 0) {
-            //if a path is found to the sink ; return true
+          if (visited[v] === false && Graph[u][v] > 0) {
             if (v === t) {
               parent[v] = u;
               return true;
@@ -401,7 +483,6 @@ class GameState {
           }
         }
       }
-      //no augmenting path was found to the sink ; return false
       return false;
     }
 
@@ -454,11 +535,11 @@ class GameState {
       //     }
       //   }
       // }
-
       this.payload.guessTrumpSuit = _.sample(suits);
       this.payload.originalTrumpSuit = '-1';
     }
   }
+
   randomlyDistribute() {
     const suits = ['C', 'D', 'H', 'S'];
     const ranks = ['J', '9', '1', 'T', 'K', 'Q', '8', '7'];
@@ -569,9 +650,6 @@ class GameState {
 
   makeAMove(move) {
     var playerId = this.payload['playerId'];
-    // if (!this.payload.trumpRevealed) {
-    //   console.log(this.payload.trumpSuit, this.payload.originalTrumpSuit, this.payload.guessTrumpSuit);
-    // }
     if (move === 'OT') {
       if (!this.payload.trumpSuit) {
         if (this.payload.originalTrumpSuit === '-1') {
@@ -619,10 +697,20 @@ class GameState {
     }
   }
 
-  randomPlay() {
+  randomPlay(suit) 
+  {
+    if (suit !== null)
+    {
+      if (this.payload.guessTrumpSuit !== '-1')
+      {
+        this.payload.guessTrumpSuit = suit;
+      }
+    }
+    // console.log("gues suit is", this.payload.guessTrumpSuit)
+
     while (this.payload.handsHistory.length < 8) {
-      // console.log(this.payload.trumpRevealed, this.payload.originalTrumpSuit, this.payload.guessTrumpSuit);
-      if (!this.payload['trumpRevealed']) {
+      if (!this.payload['trumpRevealed']) 
+      {
         let bidHistory = this.payload.bidHistory;
         let passingPlayers = [];
 
@@ -649,6 +737,7 @@ class GameState {
           this.payload.trumpSuit = false;
         }
       }
+
       if (this.payload.trumpRevealed && !this.payload.trumpSuit) {
         if (this.payload.originalTrumpSuit !== '-1') {
           this.payload.trumpSuit = this.payload.originalTrumpSuit;
@@ -657,13 +746,15 @@ class GameState {
         }
       }
 
-      let legalMoves = this.getWinningMoves();
+      let legalMoves = this.getWinningMoves2();
       // let legalMoves = this.getLegalMoves();
       let toMove = _.sample(legalMoves);
       this.makeAMove(toMove);
     }
+
     return this.terminalValue();
     // return this.dynamicTerminalValue();
   }
+
 }
 module.exports = GameState;
